@@ -7,12 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
-    <Folder Include="Models\Domain\Entities\" />
     <Folder Include="Models\DTO\" />
     <Folder Include="Services\IServices\" />
     <Folder Include="Utility\" />
