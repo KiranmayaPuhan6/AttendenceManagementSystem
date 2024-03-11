@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Data\DbContext\" />
-    <Folder Include="Models\Domain\Entities\" />
-    <Folder Include="Models\DTO\" />
     <Folder Include="Extensions\" />
     <Folder Include="Utility\" />
     <Folder Include="Services\IServices\" />
