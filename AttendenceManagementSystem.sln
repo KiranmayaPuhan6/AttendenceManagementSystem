@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceTests", "ServiceTest
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ControllerTests", "ControllerTests", "{46392490-0622-4414-B746-86CEFA588C31}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OcelotGateway", "OcelotGateway\OcelotGateway.csproj", "{52488695-1189-452D-A4F1-5A0985BFB8DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{65A540DE-EFCD-44CD-A946-FE4C0FF45324}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65A540DE-EFCD-44CD-A946-FE4C0FF45324}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65A540DE-EFCD-44CD-A946-FE4C0FF45324}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52488695-1189-452D-A4F1-5A0985BFB8DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52488695-1189-452D-A4F1-5A0985BFB8DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52488695-1189-452D-A4F1-5A0985BFB8DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52488695-1189-452D-A4F1-5A0985BFB8DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,6 +51,7 @@ Global
 		{65A540DE-EFCD-44CD-A946-FE4C0FF45324} = {16E46986-E3BC-45A3-8143-366B6557E57B}
 		{ED593993-034A-48DB-A60E-73CD847FE472} = {0D7F0CB1-05B2-4F5D-84B0-AE3954871757}
 		{46392490-0622-4414-B746-86CEFA588C31} = {0D7F0CB1-05B2-4F5D-84B0-AE3954871757}
+		{52488695-1189-452D-A4F1-5A0985BFB8DB} = {16E46986-E3BC-45A3-8143-366B6557E57B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {38CD0DD6-4586-4386-81D6-16CCF9D97840}
