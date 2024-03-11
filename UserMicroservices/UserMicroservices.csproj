@@ -13,8 +13,6 @@
 
   <ItemGroup>
     <Folder Include="Models\DTO\" />
-    <Folder Include="Services\IServices\" />
-    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>
