@@ -1,9 +1,12 @@
 using Serilog;
 using UserMicroservices.Extensions;
+using UserMicroservices.Services.IServices;
+using UserMicroservices.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<ICacheService, CacheService>();
 
 var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
