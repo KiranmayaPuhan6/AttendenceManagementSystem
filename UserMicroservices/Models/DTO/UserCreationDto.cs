@@ -1,6 +1,4 @@
-﻿using UserMicroservices.Models.Domain.Entities;
-
-namespace UserMicroservices.Models.DTO
+﻿namespace UserMicroservices.Models.DTO
 {
     public class UserCreationDto
     {
@@ -15,6 +13,6 @@ namespace UserMicroservices.Models.DTO
         public string Email { get; set; }
         public string Password { get; set; }
         public string Role { get; set; }
-        //public IFormFile? FileUri { get; set; }
+        public IFormFile? FileUri { get; set; }
     }
 }

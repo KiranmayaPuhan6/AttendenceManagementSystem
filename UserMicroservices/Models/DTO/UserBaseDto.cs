@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using UserMicroservices.Models.Domain.Entities;
-
-namespace UserMicroservices.Models.DTO
+﻿namespace UserMicroservices.Models.DTO
 {
     public class UserBaseDto
     {
@@ -16,6 +13,6 @@ namespace UserMicroservices.Models.DTO
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
         public string Role { get; set; }
-        public IFormFile? FileUri { get; set; }
+        public string ActualFileUrl { get; set; }
     }
 }

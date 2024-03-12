@@ -1,12 +1,10 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 using UserMicroservices.Extensions;
 using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
-using UserMicroservices.Services;
 using UserMicroservices.Services.IServices;
 using UserMicroservices.Utility.ResponseModel;
 using UserMicroservices.Validators;
@@ -32,7 +30,7 @@ namespace UserMicroservices.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> CreateNewUserAsync(UserCreationDto userCreationDto)
+        public async Task<ActionResult> CreateNewUserAsync([FromForm]UserCreationDto userCreationDto)
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             UserValidator validator = new UserValidator();
@@ -60,6 +58,22 @@ namespace UserMicroservices.Controllers
                 return NotFound(result);
             }
              _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+            return Ok(result);
+        }
+
+        [HttpDelete("id/{id}")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> DeleteUserAsync(int id)
+        {
+            var result = await _service.DeleteUserAsync(id);
+            if (result.StatusCode == (int)HttpStatusCode.NotFound)
+            {
+                _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                return NotFound(result);
+            }
+  
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             return Ok(result);
         }
     }

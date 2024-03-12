@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Castle.Core.Internal;
-using System;
 using System.Net;
-using System.Net.Mail;
 using UserMicroservices.Extensions;
 using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
@@ -10,7 +8,6 @@ using UserMicroservices.Repository.IRepository;
 using UserMicroservices.Services.IServices;
 using UserMicroservices.Utility;
 using UserMicroservices.Utility.ResponseModel;
-using UserMicroservices.Validators;
 
 namespace UserMicroservices.Services
 {
@@ -100,6 +97,10 @@ namespace UserMicroservices.Services
             {
                 userList = await GetAllAsync();
                 var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
             }
             else
             {
@@ -115,6 +116,39 @@ namespace UserMicroservices.Services
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return await _responseService.ResponseDtoFormatterAsync<UserDto>(true, (int)HttpStatusCode.OK, "Success", userDtoList);
+        }
+
+        public async Task<Response<UserDto>> DeleteUserAsync(int id)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var user = await _genericRepository.GetByIdAsync(id);
+
+            if (user == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "RecordsNotFound", new UserDto());
+            }
+
+            var userDto = _mapper.Map<UserDto>(user);
+
+            var result = await _genericRepository.DeleteAsync(user);
+
+            if (result)
+            {
+                if(user.ActualFileUrl != null)
+                {
+                    DeleteImage(user.ActualFileUrl);
+                }
+                var userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+            }
+
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", userDto);
         }
 
         private async Task<string> UploadImage(IFormFile objfile)
