@@ -15,6 +15,7 @@ namespace UserMicroservices.Repository
         }
 
         public async Task<IEnumerable<T>> GetAllAsync() => await Task.FromResult(table.ToList());
+        public async Task<T> GetByIdAsync(int id) => await table.FindAsync(id);
         public async Task<bool> CreateAsync(T entity)
         {
             if (entity == null)
@@ -23,6 +24,17 @@ namespace UserMicroservices.Repository
             table.Add(entity);
             return await SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteAsync(T entity)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            table.Remove(entity);
+            return await SaveChangesAsync();
+
+        }
+
         public async virtual Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return await _dbContext.SaveChangesAsync(cancellationToken) > 0;

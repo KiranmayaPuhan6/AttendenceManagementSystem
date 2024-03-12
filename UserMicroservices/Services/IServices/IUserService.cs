@@ -7,5 +7,6 @@ namespace UserMicroservices.Services.IServices
     {
         Task<Response<UserDto>> CreateNewUserAsync(UserCreationDto userCreationDto);
         Task<ResponseList<UserDto>> ReadAllUserAsync();
+        Task<Response<UserDto>> DeleteUserAsync(int id);
     }
 }

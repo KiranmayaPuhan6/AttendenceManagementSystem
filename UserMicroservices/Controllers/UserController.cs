@@ -6,6 +6,7 @@ using UserMicroservices.Extensions;
 using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
 using UserMicroservices.Services.IServices;
+using UserMicroservices.Utility.ResponseModel;
 using UserMicroservices.Validators;
 
 namespace UserMicroservices.Controllers
@@ -57,6 +58,22 @@ namespace UserMicroservices.Controllers
                 return NotFound(result);
             }
              _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+            return Ok(result);
+        }
+
+        [HttpDelete("id/{id}")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> DeleteUserAsync(int id)
+        {
+            var result = await _service.DeleteUserAsync(id);
+            if (result.StatusCode == (int)HttpStatusCode.NotFound)
+            {
+                _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                return NotFound(result);
+            }
+  
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             return Ok(result);
         }
     }
