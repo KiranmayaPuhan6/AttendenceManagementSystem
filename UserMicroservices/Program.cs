@@ -6,6 +6,8 @@ using FluentValidation.AspNetCore;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using UserMicroservices.Data;
+using UserMicroservices.Repository.IRepository;
+using UserMicroservices.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,10 @@ builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddScoped<IResponseService, ResponseService>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddScoped<IUserService, UserService>();
 
 var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
