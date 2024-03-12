@@ -1,28 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+using UserMicroservices.Models.Domain.Entities;
 
-namespace UserMicroservices.Models.Domain.Entities
+namespace UserMicroservices.Models.DTO
 {
-    public class User
+    public class UserBaseDto
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int UserID { get; set; }
         public string Name { get; set; }
-        public string Company {  get; set; }
+        public string Company { get; set; }
         public string Designation { get; set; }
         public string ManagerName { get; set; }
         public string ManagerEmail { get; set; }
-        public string Gender { get ; set; } 
+        public string Gender { get; set; }
         public string Address { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
         public string Role { get; set; }
-        [NotMapped]
         public IFormFile? FileUri { get; set; }
-        public string? ActualFileUrl { get; set; }
-        public int? PasswordResetToken { get; set; }
-        public DateTime? ResetTokenExpires { get; set; }
     }
 }
