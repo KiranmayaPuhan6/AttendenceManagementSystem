@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 using UserMicroservices.Extensions;
 using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
-using UserMicroservices.Services;
 using UserMicroservices.Services.IServices;
-using UserMicroservices.Utility.ResponseModel;
 using UserMicroservices.Validators;
 
 namespace UserMicroservices.Controllers

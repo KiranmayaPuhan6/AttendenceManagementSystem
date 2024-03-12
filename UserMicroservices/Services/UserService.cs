@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Castle.Core.Internal;
-using System;
 using System.Net;
-using System.Net.Mail;
 using UserMicroservices.Extensions;
 using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
@@ -10,7 +8,6 @@ using UserMicroservices.Repository.IRepository;
 using UserMicroservices.Services.IServices;
 using UserMicroservices.Utility;
 using UserMicroservices.Utility.ResponseModel;
-using UserMicroservices.Validators;
 
 namespace UserMicroservices.Services
 {
