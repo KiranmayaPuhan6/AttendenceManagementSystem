@@ -1,6 +1,4 @@
-﻿using UserMicroservices.Models.Domain.Entities;
-
-namespace UserMicroservices.Models.DTO
+﻿namespace UserMicroservices.Models.DTO
 {
     public class UserCreationDto
     {

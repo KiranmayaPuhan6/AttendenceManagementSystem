@@ -62,7 +62,8 @@ namespace UserMicroservices.Validators
 
         private bool IsValid(string name)
         {
-            return name.All(Char.IsLetter);
+            var valid = name.All(Char.IsLetter) || name.Contains(" ");
+            return valid;
         }
         private bool IsValidGender(string gender)
         {
