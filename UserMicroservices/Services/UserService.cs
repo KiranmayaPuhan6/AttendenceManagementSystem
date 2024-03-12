@@ -100,6 +100,10 @@ namespace UserMicroservices.Services
             {
                 userList = await GetAllAsync();
                 var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
             }
             else
             {

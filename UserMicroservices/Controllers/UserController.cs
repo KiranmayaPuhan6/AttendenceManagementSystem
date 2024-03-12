@@ -32,7 +32,7 @@ namespace UserMicroservices.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> CreateNewUserAsync(UserCreationDto userCreationDto)
+        public async Task<ActionResult> CreateNewUserAsync([FromForm]UserCreationDto userCreationDto)
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             UserValidator validator = new UserValidator();

@@ -16,6 +16,6 @@ namespace UserMicroservices.Models.DTO
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
         public string Role { get; set; }
-        public IFormFile? FileUri { get; set; }
+        public string ActualFileUrl { get; set; }
     }
 }
