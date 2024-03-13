@@ -1,0 +1,32 @@
+﻿using AMS.Entities.Data.Context;
+using AMS.Entities.Infrastructure.Repository;
+using AMS.Entities.Infrastructure.Repository.IRepository;
+using AMS.Services.Services;
+using AMS.Services.Services.IServices;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AMS.Services.ServiceRegistration
+{
+    public static class AMSServicesRegistration
+    {
+        public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseLazyLoadingProxies();
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            });
+
+            services.AddScoped<ICacheService, CacheService>();
+            services.AddScoped<IResponseService, ResponseService>();
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddScoped<IUserService, UserService>();
+
+            return services;
+        }
+    }
+}
