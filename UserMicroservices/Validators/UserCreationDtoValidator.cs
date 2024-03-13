@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using System.Text.RegularExpressions;
-using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
 
 namespace UserMicroservices.Validators
