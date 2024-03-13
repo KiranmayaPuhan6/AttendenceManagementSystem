@@ -10,6 +10,8 @@ namespace UserMicroservices.Mapper
         {
             CreateMap<User, UserDto>().ReverseMap();
             CreateMap<UserCreationDto, User>();
+            CreateMap<User, UserUpdateDto>().ReverseMap();
+            CreateMap<UserBaseDto, User>().ReverseMap();
         }
     }
 }

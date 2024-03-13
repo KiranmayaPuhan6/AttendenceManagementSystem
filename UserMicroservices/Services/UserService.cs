@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Castle.Core.Internal;
+using System.IO;
 using System.Net;
+using UserMicroservices.Data;
 using UserMicroservices.Extensions;
 using UserMicroservices.Models.Domain.Entities;
 using UserMicroservices.Models.DTO;
@@ -32,7 +34,7 @@ namespace UserMicroservices.Services
             _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
-        public async Task<Response<UserDto>> CreateNewUserAsync(UserCreationDto userCreationDto)
+        public async Task<Response<UserBaseDto>> CreateNewUserAsync(UserCreationDto userCreationDto)
         {
             string path;
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -42,7 +44,7 @@ namespace UserMicroservices.Services
                 path = await UploadImage(user.FileUri);
                 if (path == "Not a valid type")
                 {
-                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error", new UserDto());
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error image type", new UserBaseDto());
                 }
             }
             else
@@ -75,15 +77,16 @@ namespace UserMicroservices.Services
                 {
                     _logger.LogDebug($"Data set into Cache");
                 }
-                var userDto = _mapper.Map<UserDto>(user);
+                var userBaseDto = _mapper.Map<UserBaseDto>(user);
+                userBaseDto.ActualFileUrl = path;
 
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
 
-                return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.Created, "Success", userDto);
+                return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.Created, "Success", userBaseDto);
             }
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
 
-            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error", new UserDto());
+            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error", new UserBaseDto());
         }
 
         public async Task<ResponseList<UserDto>> ReadAllUserAsync()
@@ -116,6 +119,69 @@ namespace UserMicroservices.Services
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return await _responseService.ResponseDtoFormatterAsync<UserDto>(true, (int)HttpStatusCode.OK, "Success", userDtoList);
+        }
+
+        public async Task<Response<UserBaseDto>> UpdateUserAsync(UserUpdateDto userUpdateDto)
+        {
+            string path;
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var userInfo = await _genericRepository.GetByIdAsync(userUpdateDto.UserId);
+            if (userInfo == null)
+            {
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "No such user", new UserBaseDto());
+            }
+            var user = _mapper.Map<User>(userUpdateDto);
+            if (user.FileUri != null)
+            {
+                if (userInfo.ActualFileUrl != null)
+                {
+                    DeleteImage(userInfo.ActualFileUrl);
+                }
+                path = await UploadImage(user.FileUri);
+                if (path == "Not a valid type")
+                {
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error image type", new UserBaseDto());
+                }
+            }
+            else
+            {
+                path = null;
+            }
+            var userModel = new User()
+            {
+                UserID = userUpdateDto.UserId,
+                Company = user.Company,
+                Designation = user.Designation,
+                ManagerName = user.ManagerName,
+                ManagerEmail = user.ManagerEmail,
+                Address = user.Address,
+                Gender = user.Gender,
+                Email = user.Email,
+                Password = userInfo.Password,
+                Role = user.Role,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+                ActualFileUrl = path
+            };
+            var result = await _genericRepository.UpdateAsync(userModel);
+
+            if (result)
+            {
+                var userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+
+                var userBaseDto = _mapper.Map<UserBaseDto>(userModel);
+
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Updated", userBaseDto);
+            }
+
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "Error", new UserBaseDto());
         }
 
         public async Task<Response<UserDto>> DeleteUserAsync(int id)
@@ -151,12 +217,45 @@ namespace UserMicroservices.Services
             return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", userDto);
         }
 
+        public async Task<Response<UserDto>> ReadUserAsync(int id)
+        {
+            IEnumerable<User> userList;
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = GetData(CacheKeys.User);
+
+            if (result.IsNullOrEmpty())
+            {
+                userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+            }
+            else
+            {
+                userList = result;
+            }
+
+            var userDto = _mapper.Map<UserDto>(userList?.FirstOrDefault(x => x.UserID == id));
+
+            if (userDto == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "RecordsNotFound", new UserDto());
+            }
+
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.OK, "Success", userDto);
+        }
+
         private async Task<string> UploadImage(IFormFile objfile)
         {
             try
             {
                 string guid = Guid.NewGuid().ToString();
-                string[] allowedExtension = new string[] { ".jpg", ".jpeg", ".png" };
+                string[] allowedExtension = new string[] { ".jpg", ".jpeg", ".png", ".jfif" };
                 if (objfile.Length > 0)
                 {
                     if (!Directory.Exists(_environment.WebRootPath + "\\Upload\\"))
@@ -164,7 +263,7 @@ namespace UserMicroservices.Services
                         Directory.CreateDirectory(_environment.WebRootPath + "\\Upload\\");
                     }
                     string extension = Path.GetExtension(objfile.FileName);
-                    if (extension.Equals(allowedExtension[0]) || extension.Equals(allowedExtension[1]) || extension.Equals(allowedExtension[2]))
+                    if ((allowedExtension.Contains(extension)))
                     {
                         using (FileStream fileStream = System.IO.File.Create(_environment.WebRootPath + "\\Upload\\" + guid + objfile.FileName))
                         {
@@ -223,5 +322,6 @@ namespace UserMicroservices.Services
             var success = _cacheService.SetData<IEnumerable<User>>(key, data, expirationTime);
             return success;
         }
+
     }
 }

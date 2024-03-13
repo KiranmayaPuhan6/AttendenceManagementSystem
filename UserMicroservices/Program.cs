@@ -16,6 +16,7 @@ builder.Services.AddDbContext<UserDbContext>(options =>
 {
     options.UseLazyLoadingProxies();
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
