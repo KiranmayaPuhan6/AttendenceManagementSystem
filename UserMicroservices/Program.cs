@@ -1,30 +1,13 @@
-using Serilog;
-using UserMicroservices.Extensions;
-using UserMicroservices.Services.IServices;
-using UserMicroservices.Services;
 using FluentValidation.AspNetCore;
+using Serilog;
 using System.Reflection;
-using Microsoft.EntityFrameworkCore;
-using UserMicroservices.Data;
-using UserMicroservices.Repository.IRepository;
-using UserMicroservices.Repository;
-using Microsoft.AspNetCore.Mvc;
+using UserMicroservices.Extensions;
 using UserMicroservices.ServiceRegistration;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<UserDbContext>(options =>
-{
-    options.UseLazyLoadingProxies();
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-});
-builder.Services.AddScoped<ICacheService, CacheService>();
-builder.Services.AddScoped<IResponseService, ResponseService>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddServices(builder.Configuration);
 
 var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
