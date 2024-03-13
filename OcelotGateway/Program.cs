@@ -1,3 +1,5 @@
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
 using OcelotGateway.Extensions;
 using Serilog;
 
@@ -18,6 +20,10 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();
+builder.Services.AddOcelot(builder.Configuration);
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -34,6 +40,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("gatewaypolicy");
+
+app.UseOcelot();
+
+app.UseStaticFiles();
 
 app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
 

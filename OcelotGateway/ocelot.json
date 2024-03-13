@@ -1,0 +1,33 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/api/User",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
+
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7122
+        }
+      ],
+      "DownstreamPathTemplate": "/api/User"
+    },
+    {
+      "UpstreamPathTemplate": "/api/User/id/{id}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7122
+        }
+      ],
+      "DownstreamPathTemplate": "/api/User/id/{id}"
+    }
+  ],
+  "GlobalConfiguration": {
+
+  }
+}
