@@ -17,13 +17,11 @@ namespace UserMicroservices.Controllers
     {
         private readonly IUserService _service;
         private readonly ILogger<UserController> _logger;
-        private readonly IMapper _mapper;
 
         public UserController(IUserService service, ILogger<UserController> logger, IMapper mapper)
         {
             _service = service;
             _logger = logger;
-            _mapper = mapper;
         }
 
         [HttpPost(Name = "CreateNewUser")]
@@ -33,15 +31,19 @@ namespace UserMicroservices.Controllers
         public async Task<ActionResult> CreateNewUserAsync([FromForm]UserCreationDto userCreationDto)
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            UserValidator validator = new UserValidator();
-            var user = _mapper.Map<User>(userCreationDto);
-            var validation = validator.Validate(user);
+            UserCreationDtoValidator validator = new UserCreationDtoValidator();
+            var validation = validator.Validate(userCreationDto);
             if (!validation.IsValid)
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended with errors. {validation}");
                 return BadRequest(validation);
             }
             var result = await _service.CreateNewUserAsync(userCreationDto);
+            if(!result.IsSuccess)
+            {
+                _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                return BadRequest(result);
+            }
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             return Ok(result);
         }
@@ -51,6 +53,7 @@ namespace UserMicroservices.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> ReadAllUserAsync()
         {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var result = await _service.ReadAllUserAsync();
             if (result.StatusCode == (int)HttpStatusCode.NotFound)
             {
@@ -61,11 +64,37 @@ namespace UserMicroservices.Controllers
             return Ok(result);
         }
 
+        [HttpPut(Name = "UpdateUser")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> UpdateUserAsync([FromForm]UserUpdateDto userUpdateDto)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            UserUpdateDtoValidator validator = new UserUpdateDtoValidator();
+            var validation = validator.Validate(userUpdateDto);
+            if (!validation.IsValid)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended with errors. {validation}");
+                return BadRequest(validation);
+            }
+
+            var result = await _service.UpdateUserAsync(userUpdateDto);
+            if (result.StatusCode == (int)HttpStatusCode.NotFound)
+            {
+                _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                return NotFound(result);
+            }
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+            return Ok(result);
+        }
+
         [HttpDelete("id/{id}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> DeleteUserAsync(int id)
         {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var result = await _service.DeleteUserAsync(id);
             if (result.StatusCode == (int)HttpStatusCode.NotFound)
             {
@@ -73,6 +102,22 @@ namespace UserMicroservices.Controllers
                 return NotFound(result);
             }
   
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+            return Ok(result);
+        }
+
+        [HttpGet("id/{id}")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> ReadApiConfigResponseAsync(int id)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.ReadUserAsync(id);
+            if (result.StatusCode == (int)HttpStatusCode.NotFound)
+            {
+                _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                return NotFound(result);
+            }
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             return Ok(result);
         }

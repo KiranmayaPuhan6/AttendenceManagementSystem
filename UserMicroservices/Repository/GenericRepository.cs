@@ -16,12 +16,22 @@ namespace UserMicroservices.Repository
 
         public async Task<IEnumerable<T>> GetAllAsync() => await Task.FromResult(table.ToList());
         public async Task<T> GetByIdAsync(int id) => await table.FindAsync(id);
+        public async Task<T> GetByEmailAsync(string email) => await table.FindAsync(email);
         public async Task<bool> CreateAsync(T entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
             table.Add(entity);
+            return await SaveChangesAsync();
+        }
+
+        public async Task<bool> UpdateAsync(T entity)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            table.Update(entity);
             return await SaveChangesAsync();
         }
 
