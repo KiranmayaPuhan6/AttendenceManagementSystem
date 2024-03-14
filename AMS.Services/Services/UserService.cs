@@ -87,7 +87,7 @@ namespace AMS.Services.Services
                 {
                     To = user.Email,
                     Subject = $"Registration Successful",
-                    Message = $"<html><body><p>Hi {user.Name},</p><p>Thanks for registering to Attendence Management System.</p><p> Have a nice day.</p><p> Thanks,</p><p> AMS Team</p></body></html>",
+                    Message = $"<html><body><p>Hi {user.Name},</p><p>Thanks for registering to Attendence Management System.</p><p> Have a nice day.</p><p> Thanks,</p><p> AMS Team.</p></body></html>",
                 };
                 await _emailService.SendEmailAsync(emailAddress);
 
