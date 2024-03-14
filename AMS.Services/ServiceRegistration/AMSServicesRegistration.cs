@@ -29,6 +29,8 @@ namespace AMS.Services.ServiceRegistration
             services.AddScoped<IAttendenceService, AttendenceService>();
             services.Configure<TwilioOptions>(configuration.GetSection("Twilio"));
             services.AddScoped<ISmsService, SmsService>();
+            services.Configure<EmailOptions>(configuration.GetSection("Email"));
+            services.AddScoped<IEmailService, EmailService>();
 
             return services;
         }

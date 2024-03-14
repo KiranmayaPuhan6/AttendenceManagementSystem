@@ -25,9 +25,9 @@ namespace AMS.Services.Services
         private readonly ILogger<UserService> _logger;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _environment;
-        private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
         public UserService(IGenericRepository<User> genericRepository, ICacheService cacheService, IResponseService responseService, 
-            ILogger<UserService> logger, IMapper mapper, IWebHostEnvironment environment, IConfiguration config)
+            ILogger<UserService> logger, IMapper mapper, IWebHostEnvironment environment, IEmailService emailService)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -35,7 +35,7 @@ namespace AMS.Services.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         public async Task<Response<UserBaseDto>> CreateNewUserAsync(UserCreationDto userCreationDto)
@@ -83,6 +83,13 @@ namespace AMS.Services.Services
                 }
                 var userBaseDto = _mapper.Map<UserBaseDto>(user);
                 userBaseDto.ActualFileUrl = path;
+                EmailAddress emailAddress = new EmailAddress
+                {
+                    To = user.Email,
+                    Subject = $"Registration Successful",
+                    Message = $"<html><body><p>Hi {user.Name},</p><p>Thanks for registering to Attendence Management System.</p><p> Have a nice day.</p><p> Thanks,</p><p> AMS Team</p></body></html>",
+                };
+                await _emailService.SendEmailAsync(emailAddress);
 
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
 
