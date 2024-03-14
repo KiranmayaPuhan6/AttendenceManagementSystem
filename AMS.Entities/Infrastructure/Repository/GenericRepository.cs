@@ -1,6 +1,9 @@
 ﻿using AMS.Entities.Data.Context;
 using AMS.Entities.Infrastructure.Repository.IRepository;
+using AMS.Entities.Models.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace AMS.Entities.Infrastructure.Repository
 {
@@ -17,6 +20,22 @@ namespace AMS.Entities.Infrastructure.Repository
         public async Task<IEnumerable<T>> GetAllAsync() => await Task.FromResult(table.ToList());
         public async Task<T> GetByIdAsync(int id) => await table.FindAsync(id);
         public async Task<T> GetByEmailAsync(string email) => await table.FindAsync(email);
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IIncludableQueryable<T, object>> includes = null)
+        {
+            IQueryable<T> query = table;
+
+            if (includes != null)
+            {
+                query = includes(query);
+            }
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            return await query.ToListAsync();
+        }
         public async Task<bool> CreateAsync(T entity)
         {
             if (entity == null)

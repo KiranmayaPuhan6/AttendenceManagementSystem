@@ -7,12 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTO\AttendenceDto\" />
     <Folder Include="DTO\LeaveDto\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AMS.Entities\AMS.Entities.csproj" />
   </ItemGroup>
 
 </Project>
