@@ -25,15 +25,15 @@ namespace AMS.Entities.Data.Context
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseLazyLoadingProxies();
+           // optionsBuilder.UseLazyLoadingProxies();
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.Entity<Attendence>()
-            //    .HasOne(a => a.User)
-            //    .WithMany()
-            //    .HasForeignKey(a => a.UserId)
-            //    .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Attendence>()
+                 .HasOne(a => a.User)
+                 .WithMany(u => u.Attendence)
+                 .HasForeignKey(a => a.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
             //modelBuilder.Entity<Leave>()
             //    .HasOne(a => a.User)
             //    .WithMany()
@@ -41,7 +41,7 @@ namespace AMS.Entities.Data.Context
             //    .OnDelete(DeleteBehavior.Cascade);
         }
         public virtual DbSet<User> Users { get; set; }
-        //public virtual DbSet<Attendence> Attendences { get; set; }
+        public virtual DbSet<Attendence> Attendences { get; set; }
         //public virtual DbSet<Leave> Leaves { get; set; }
     }
 }

@@ -3,5 +3,6 @@
     public class UserDto : UserBaseDto
     {
         public int UserId { get; set; }
+        public virtual IEnumerable<AMS.DtoLibrary.DTO.AttendenceDto.AttendenceDto> Attendence { get; set; }
     }
 }

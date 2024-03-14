@@ -1,7 +1,8 @@
 ﻿using AMS.Controller.Extensions;
 using AMS.Controller.Validators.UserValidators;
-using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Services.Services.IServices;
+using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
@@ -10,32 +11,26 @@ namespace AMS.Controller.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class AttendenceController : ControllerBase
     {
-        private readonly IUserService _service;
-        private readonly ILogger<UserController> _logger;
+        private readonly IAttendenceService _service;
+        private readonly ILogger<AttendenceController> _logger;
 
-        public UserController(IUserService service, ILogger<UserController> logger)
+        public AttendenceController(IAttendenceService service, ILogger<AttendenceController> logger)
         {
             _service = service;
             _logger = logger;
         }
 
-        [HttpPost(Name = "CreateNewUser")]
+        [HttpPost("Login/{userId}")]
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> CreateNewUserAsync([FromForm] UserCreationDto userCreationDto)
+        public async Task<IActionResult> AttendenceLogIn(int userId)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            UserCreationDtoValidator validator = new UserCreationDtoValidator();
-            var validation = validator.Validate(userCreationDto);
-            if (!validation.IsValid)
-            {
-                _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended with errors. {validation}");
-                return BadRequest(validation);
-            }
-            var result = await _service.CreateNewUserAsync(userCreationDto);
+
+            var result = await _service.AttendenceLogIn(userId);
             if (!result.IsSuccess)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
@@ -47,45 +42,18 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpGet(Name = "ReadAllUser")]
-        [SwaggerResponse(StatusCodes.Status200OK)]
-        [SwaggerResponse(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> ReadAllUserAsync()
-        {
-            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            var result = await _service.ReadAllUserAsync();
-            if (result.StatusCode == (int)HttpStatusCode.NotFound)
-            {
-                _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
-                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return NotFound(result);
-            }
-            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
-            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return Ok(result);
-        }
-
-        [HttpPut(Name = "UpdateUser")]
+        [HttpPut("Logout/{userId}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> UpdateUserAsync([FromForm] UserUpdateDto userUpdateDto)
+        public async Task<IActionResult> LogOut(int userId)
         {
-            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            UserUpdateDtoValidator validator = new UserUpdateDtoValidator();
-            var validation = validator.Validate(userUpdateDto);
-            if (!validation.IsValid)
-            {
-                _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended with errors. {validation}");
-                return BadRequest(validation);
-            }
-
-            var result = await _service.UpdateUserAsync(userUpdateDto);
-            if (result.StatusCode == (int)HttpStatusCode.NotFound)
+            var result = await _service.AttendenceLogOut(userId);
+            if (!result.IsSuccess)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
                 _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return NotFound(result);
+                return BadRequest(result);
             }
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
@@ -95,10 +63,10 @@ namespace AMS.Controller.Controllers
         [HttpDelete("id/{id}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> DeleteUserAsync(int id)
+        public async Task<ActionResult> DeleteAttendenceAsync(int id)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            var result = await _service.DeleteUserAsync(id);
+            var result = await _service.DeleteAttendenceAsync(id);
             if (result.StatusCode == (int)HttpStatusCode.NotFound)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
@@ -111,13 +79,13 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpGet("id/{id}")]
+        [HttpGet(Name = "GetAllAttendence")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> ReadApiConfigResponseAsync(int id)
+        public async Task<IActionResult> GetAllAttendances()
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            var result = await _service.ReadUserAsync(id);
+            var result = await _service.GetAllAttendenceAsync();
             if (result.StatusCode == (int)HttpStatusCode.NotFound)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AMS.Entities.Models.Domain.Entities
 {
-    [Table("User")]
+    [Table("Users")]
     public class User
     {
         [Key]
@@ -26,7 +26,7 @@ namespace AMS.Entities.Models.Domain.Entities
         public string? ActualFileUrl { get; set; }
         public int? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpires { get; set; }
-        //public virtual IList<Attendence> Attendence { get; set; }
+        public virtual IEnumerable<Attendence> Attendence { get; set; }
         //public virtual IList<Leave> Leaves { get; set; }
     }
 }

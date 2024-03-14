@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using AMS.Services.Utility.HelperMethods;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 
 namespace AMS.Services.Services
 {
@@ -306,7 +307,7 @@ namespace AMS.Services.Services
 
         private async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _genericRepository.GetAllAsync();
+            return await _genericRepository.GetAllAsync(predicate: null,includes: q => q.Include(u => u.Attendence));
         }
 
         private IEnumerable<User> GetData(string key)
