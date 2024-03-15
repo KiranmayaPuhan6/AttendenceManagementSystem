@@ -41,7 +41,8 @@ namespace AMS.Services.Services
             var attendance = new Attendence
             {
                 UserId = userId,
-                LoginTime = DateTime.Now
+                LoginTime = DateTime.Now,
+                AttendenceType = "Regular"
             };
 
             var result = await _genericRepository.CreateAsync(attendance);
@@ -80,7 +81,7 @@ namespace AMS.Services.Services
             if (result.IsNullOrEmpty())
             {
                 attendenceList = await GetAllAsync();
-                var isSuccess = SetData(CacheKeys.User, attendenceList);
+                var isSuccess = SetData(CacheKeys.Attendence, attendenceList);
                 if (isSuccess)
                 {
                     _logger.LogDebug($"Data set into Cache");
@@ -122,7 +123,7 @@ namespace AMS.Services.Services
                 var phoneNumber = await GetPhoneNumberAsync(userId);
                 if (phoneNumber != null)
                 {
-                    await _smsService.SendMessageAsync(phoneNumber, $"Your Logout Time for Date -: {attendance.LogoutTime.Value.ToString("dd/MM/yyyy")} is {attendance.LogoutTime.Value.ToString("HH:mm:ss")} .");
+                   await _smsService.SendMessageAsync(phoneNumber, $"Your Logout Time for Date -: {attendance.LogoutTime.Value.ToString("dd/MM/yyyy")} is {attendance.LogoutTime.Value.ToString("HH:mm:ss")} .");
                 }
 
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
@@ -188,10 +189,12 @@ namespace AMS.Services.Services
                 {
                     _logger.LogDebug($"Data set into Cache");
                 }
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", attendenceDto);
             }
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", attendenceDto);
+            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Deletion Unsuccessful", new AttendenceDto());
         }
 
         private async Task<IEnumerable<Attendence>> GetAllAsync()

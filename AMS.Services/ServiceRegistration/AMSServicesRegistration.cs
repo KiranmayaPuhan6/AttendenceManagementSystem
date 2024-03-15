@@ -30,7 +30,9 @@ namespace AMS.Services.ServiceRegistration
             services.Configure<TwilioOptions>(configuration.GetSection("Twilio"));
             services.AddScoped<ISmsService, SmsService>();
             services.Configure<EmailOptions>(configuration.GetSection("Email"));
+            services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ILeaveService, LeaveService>();
 
             return services;
         }

@@ -24,17 +24,17 @@ namespace AMS.Services.Services
         private readonly IResponseService _responseService;
         private readonly ILogger<UserService> _logger;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IImageService _imageService;
         private readonly IEmailService _emailService;
         public UserService(IGenericRepository<User> genericRepository, ICacheService cacheService, IResponseService responseService, 
-            ILogger<UserService> logger, IMapper mapper, IWebHostEnvironment environment, IEmailService emailService)
+            ILogger<UserService> logger, IMapper mapper, IImageService imageService, IEmailService emailService)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
             _responseService = responseService ?? throw new ArgumentNullException(nameof(responseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
@@ -45,7 +45,7 @@ namespace AMS.Services.Services
             var user = _mapper.Map<User>(userCreationDto);
             if (user.FileUri != null)
             {
-                path = await UploadImage(user.FileUri);
+                path = await _imageService.UploadImageAsync(user.FileUri);
                 if (path == "Not a valid type")
                 {
                     return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error image type", new UserBaseDto());
@@ -87,7 +87,7 @@ namespace AMS.Services.Services
                 {
                     To = user.Email,
                     Subject = $"Registration Successful",
-                    Message = $"<html><body><p>Hi {user.Name},</p><p>Thanks for registering to Attendence Management System.</p><p> Have a nice day.</p><p> Thanks,</p><p> AMS Team</p></body></html>",
+                    Message = $"<html><body><p>Hi {user.Name},</p><p>Thanks for registering to Attendence Management System.</p><p> Have a nice day.</p><p> Thanks,</p><p> AMS Team.</p></body></html>",
                 };
                 await _emailService.SendEmailAsync(emailAddress);
 
@@ -139,6 +139,7 @@ namespace AMS.Services.Services
             var userInfo = await _genericRepository.GetByIdAsync(userUpdateDto.UserId);
             if (userInfo == null)
             {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "No such user", new UserBaseDto());
             }
             var user = _mapper.Map<User>(userUpdateDto);
@@ -146,11 +147,17 @@ namespace AMS.Services.Services
             {
                 if (userInfo.ActualFileUrl != null)
                 {
-                    DeleteImage(userInfo.ActualFileUrl);
+                   var deletionResult = await _imageService.DeleteImageAsync(userInfo.ActualFileUrl);
+                    if (deletionResult == null)
+                    {
+                        _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                        return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Image Deletion Unsuccessful", new UserBaseDto());
+                    }
                 }
-                path = await UploadImage(user.FileUri);
+                path = await _imageService.UploadImageAsync(user.FileUri);
                 if (path == "Not a valid type")
                 {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                     return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error image type", new UserBaseDto());
                 }
             }
@@ -214,7 +221,12 @@ namespace AMS.Services.Services
             {
                 if(user.ActualFileUrl != null)
                 {
-                    DeleteImage(user.ActualFileUrl);
+                    var deletionImage = await _imageService.DeleteImageAsync(user.ActualFileUrl);
+                    if (deletionImage == null)
+                    {
+                        _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                        return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Deletion Unsuccessful", new UserDto());
+                    }
                 }
                 var userList = await GetAllAsync();
                 var isSuccess = SetData(CacheKeys.User, userList);
@@ -222,10 +234,12 @@ namespace AMS.Services.Services
                 {
                     _logger.LogDebug($"Data set into Cache");
                 }
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", userDto);
             }
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", userDto);
+            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Deletion Unsuccessful", new UserDto());
         }
 
         public async Task<Response<UserDto>> ReadUserAsync(int id)
@@ -261,60 +275,9 @@ namespace AMS.Services.Services
             return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.OK, "Success", userDto);
         }
 
-        private async Task<string> UploadImage(IFormFile objfile)
-        {
-            try
-            {
-                string guid = Guid.NewGuid().ToString();
-                string[] allowedExtension = new string[] { ".jpg", ".jpeg", ".png", ".jfif" };
-                if (objfile.Length > 0)
-                {
-                    if (!Directory.Exists(_environment.WebRootPath + "\\Upload\\"))
-                    {
-                        Directory.CreateDirectory(_environment.WebRootPath + "\\Upload\\");
-                    }
-                    string extension = Path.GetExtension(objfile.FileName);
-                    if ((allowedExtension.Contains(extension)))
-                    {
-                        using (FileStream fileStream = System.IO.File.Create(_environment.WebRootPath + "\\Upload\\" + guid + objfile.FileName))
-                        {
-                            objfile.CopyTo(fileStream);
-                            fileStream.Flush();
-                            return "\\Upload\\" + guid + objfile.FileName;
-                        }
-                    }
-                    else
-                    {
-                        return "Not a valid type";
-                    }
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                return ex.Message.ToString();
-            }
-        }
-        public async Task<string> DeleteImage(string path)
-        {
-            FileInfo fileInfo = new FileInfo(_environment.WebRootPath + path);
-            if (fileInfo.Exists)
-            {
-                fileInfo.Delete();
-                return "Deleted";
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         private async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _genericRepository.GetAllAsync(predicate: null,includes: q => q.Include(u => u.Attendence));
+            return await _genericRepository.GetAllAsync(predicate: null,includes: q => q.Include(u => u.Attendence).Include(u => u.Leave));
         }
 
         private IEnumerable<User> GetData(string key)

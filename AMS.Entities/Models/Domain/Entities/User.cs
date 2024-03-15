@@ -27,6 +27,6 @@ namespace AMS.Entities.Models.Domain.Entities
         public int? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpires { get; set; }
         public virtual IEnumerable<Attendence> Attendence { get; set; }
-        //public virtual IList<Leave> Leaves { get; set; }
+        public virtual IEnumerable<Leave> Leave { get; set; }
     }
 }

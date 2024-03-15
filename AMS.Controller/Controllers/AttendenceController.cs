@@ -46,7 +46,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> LogOut(int userId)
+        public async Task<IActionResult> AttendenceLogOut(int userId)
         {
             var result = await _service.AttendenceLogOut(userId);
             if (!result.IsSuccess)
@@ -72,6 +72,12 @@ namespace AMS.Controller.Controllers
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
                 _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return NotFound(result);
+            }
+            if (result.StatusCode == (int)HttpStatusCode.BadRequest)
+            {
+                _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest(result);
             }
 
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
