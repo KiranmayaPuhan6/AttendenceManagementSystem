@@ -59,7 +59,17 @@ namespace AMS.Services.Services
             {
                 leaveList = result;
             }
-
+            for(var date = leave.LeaveStartDate.Date; date < leave.LeaveEndDate.Date; date = date.AddDays(1))
+            {
+                var appliedLeaveList = leaveList?.Where(l => l.UserId == leave.UserId);
+                var isAlreadyApplied = appliedLeaveList?.Any(l => l.LeaveStartDate <= date && l.LeaveEndDate.AddDays(-1) >= date);
+                if((bool)isAlreadyApplied)
+                {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Leave Already Applied", new LeaveBaseDto());
+                }
+            }
+            //var appliedLeaveList = leaveList?.Where(x =>  x.LeaveStartDate  && x.LeaveEndDate < leaveCreationDto.LeaveEndDate && x.UserId = leaveCreationDto.UserId);
             leave.NumberOfDaysLeave = (leave.LeaveEndDate - leave.LeaveStartDate).TotalDays;
             
             if (leave.StartHalfDay)
@@ -201,24 +211,39 @@ namespace AMS.Services.Services
                 {                 
                    
                     var attendenceList = GetALlAttendenceByUserIdAsync(leave.UserId);
-                    for (var date = leave.LeaveStartDate.Date; date < leave.LeaveEndDate; date = date.AddDays(1))
+                    if(leave.StartHalfDay)
                     {
-                        var isPresent = attendenceList?.Result.Where(x => x.LoginTime.Date ==  date && x.AttendenceType == "Regular");
-                        foreach(var item in isPresent)
+                        var endDate = leave.LeaveEndDate.Date.AddDays(-1);
+                        var halfDayttendenceRecord = new Attendence
                         {
-                            await _attendenceRepository.DeleteAsync(item);
-                        }
-                        var attendenceRecord = new Attendence
-                        {
-                            LoginTime = date.AddHours(9),
-                            LogoutTime = date.AddHours(17),
-                            TotalLoggedInTime = 8,
+                            LoginTime = endDate.AddHours(9),
+                            LogoutTime = endDate.AddHours(13),
+                            TotalLoggedInTime = 4,
                             AttendenceType = "Leave",
                             UserId = leave.UserId
                         };
 
-                        await _attendenceRepository.CreateAsync(attendenceRecord);
+                        await _attendenceRepository.CreateAsync(halfDayttendenceRecord);
+                        for (var date = leave.LeaveStartDate.Date; date < endDate; date = date.AddDays(1))
+                        {
+                            var isPresent = attendenceList?.Result.Where(x => x.LoginTime.Date == date && x.AttendenceType == "Regular" && x.TotalLoggedInTime >= 5);
+                            foreach (var item in isPresent)
+                            {
+                                await _attendenceRepository.DeleteAsync(item);
+                            }
+                            var attendenceRecord = new Attendence
+                            {
+                                LoginTime = date.AddHours(9),
+                                LogoutTime = date.AddHours(17),
+                                TotalLoggedInTime = 8,
+                                AttendenceType = "Leave",
+                                UserId = leave.UserId
+                            };
+
+                            await _attendenceRepository.CreateAsync(attendenceRecord);
+                        }
                     }
+                    
                     var leaveDto = _mapper.Map<LeaveDto>(leave);
                     if (email != null)
                     {
