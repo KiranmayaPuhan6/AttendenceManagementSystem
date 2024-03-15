@@ -1,15 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace AMS.Entities.Models.Domain.Entities
+namespace AMS.DtoLibrary.DTO.LeaveDto
 {
-    [Table("Leave")]
-    public class Leave
+    public class LeaveBaseDto
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public int TotalLeaves { get; set; } = 15;
+        public int TotalLeaves { get; set; }
         public DateTime LeaveStartDate { get; set; }
         public DateTime LeaveEndDate { get; set; }
         public bool StartHalfDay { get; set; }
@@ -18,6 +17,5 @@ namespace AMS.Entities.Models.Domain.Entities
         public double TotalLeavesLeft { get; set; }
         public bool IsApproved { get; set; }
         public int UserId { get; set; }
-        public User User { get; set; }
     }
 }

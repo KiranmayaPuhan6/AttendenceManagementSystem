@@ -1,8 +1,11 @@
 ﻿using AMS.Controller.Extensions;
-using AMS.Controller.Validators.UserValidators;
-using AMS.DtoLibrary.DTO.UserDto;
+using AMS.DtoLibrary.DTO.LeaveDto;
+using AMS.Entities.Data.Context;
+using AMS.Entities.Infrastructure.Repository.IRepository;
+using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 
@@ -10,32 +13,26 @@ namespace AMS.Controller.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class LeaveController : ControllerBase
     {
-        private readonly IUserService _service;
-        private readonly ILogger<UserController> _logger;
+        private readonly ILeaveService _service;
+        private readonly ILogger<LeaveController> _logger;
 
-        public UserController(IUserService service, ILogger<UserController> logger)
+        public LeaveController(ILeaveService service, ILogger<LeaveController> logger)
         {
             _service = service;
             _logger = logger;
         }
 
-        [HttpPost(Name = "CreateNewUser")]
+        [HttpPost("ApplyLeave")]
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> CreateNewUserAsync([FromForm] UserCreationDto userCreationDto)
+        public async Task<IActionResult> ApplyLeaveAsync(LeaveCreationDto leaveCreationDto)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            UserCreationDtoValidator validator = new UserCreationDtoValidator();
-            var validation = validator.Validate(userCreationDto);
-            if (!validation.IsValid)
-            {
-                _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended with errors. {validation}");
-                return BadRequest(validation);
-            }
-            var result = await _service.CreateNewUserAsync(userCreationDto);
+
+            var result = await _service.ApplyLeaveAsync(leaveCreationDto);
             if (!result.IsSuccess)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
@@ -47,45 +44,18 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpGet(Name = "ReadAllUser")]
-        [SwaggerResponse(StatusCodes.Status200OK)]
-        [SwaggerResponse(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> ReadAllUserAsync()
-        {
-            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            var result = await _service.ReadAllUserAsync();
-            if (result.StatusCode == (int)HttpStatusCode.NotFound)
-            {
-                _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
-                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return NotFound(result);
-            }
-            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
-            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return Ok(result);
-        }
-
-        [HttpPut(Name = "UpdateUser")]
+        [HttpPut("ApproveLeave")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> UpdateUserAsync([FromForm] UserUpdateDto userUpdateDto)
+        public async Task<IActionResult> ApproveLeaveAsync(LeaveUpdateDto leaveUpdateDto)
         {
-            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            UserUpdateDtoValidator validator = new UserUpdateDtoValidator();
-            var validation = validator.Validate(userUpdateDto);
-            if (!validation.IsValid)
-            {
-                _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended with errors. {validation}");
-                return BadRequest(validation);
-            }
-
-            var result = await _service.UpdateUserAsync(userUpdateDto);
-            if (result.StatusCode == (int)HttpStatusCode.NotFound)
+            var result = await _service.ApproveLeaveAsync(leaveUpdateDto);
+            if (!result.IsSuccess)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
                 _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return NotFound(result);
+                return BadRequest(result);
             }
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
@@ -95,11 +65,10 @@ namespace AMS.Controller.Controllers
         [HttpDelete("id/{id}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
-        [SwaggerResponse(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> DeleteUserAsync(int id)
+        public async Task<ActionResult> DeleteLeaveAsync(int id)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            var result = await _service.DeleteUserAsync(id);
+            var result = await _service.DeleteLeaveAsync(id);
             if (result.StatusCode == (int)HttpStatusCode.NotFound)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
@@ -118,13 +87,13 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpGet("id/{id}")]
+        [HttpGet(Name = "GetAllLeaves")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> ReadApiConfigResponseAsync(int id)
+        public async Task<IActionResult> GetAllLeavesAsync()
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
-            var result = await _service.ReadUserAsync(id);
+            var result = await _service.GetAllLeavesAsync();
             if (result.StatusCode == (int)HttpStatusCode.NotFound)
             {
                 _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
@@ -135,5 +104,6 @@ namespace AMS.Controller.Controllers
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok(result);
         }
+
     }
 }
