@@ -44,7 +44,7 @@ namespace AMS.Controller.Validators.UserValidators
               .NotNull().WithMessage("Phone Number is required.")
               .MinimumLength(10).WithMessage("PhoneNumber must not be less than 10 characters.")
               .MaximumLength(20).WithMessage("PhoneNumber must not exceed 20 characters.")
-              .Matches(new Regex(@"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$")).WithMessage("PhoneNumber not valid");
+              .Matches(new Regex(@"^\+(?:[0-9]●?){6,14}[0-9]$")).WithMessage("PhoneNumber not valid");
             RuleFor(p => p.Email)
              .Cascade(CascadeMode.StopOnFirstFailure)
              .NotEmpty().WithMessage("{PropertyName} should be not empty")

@@ -50,6 +50,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ApproveLeaveAsync(LeaveUpdateDto leaveUpdateDto)
         {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var result = await _service.ApproveLeaveAsync(leaveUpdateDto);
             if (!result.IsSuccess)
             {
