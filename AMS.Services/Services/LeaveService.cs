@@ -154,51 +154,60 @@ namespace AMS.Services.Services
 
             leave.IsApproved = leaveUpdateDto.IsApproved;
 
+            var email = await GetEmailAsync(leave.UserId);
+
             if (leave.IsApproved)
             {
+                var result = GetData(CacheKeys.Leave);
+
+                if (result.IsNullOrEmpty())
+                {
+                    leaveList = await GetAllAsync();
+                    var isSuccess = SetData(CacheKeys.Leave, leaveList);
+                    if (isSuccess)
+                    {
+                        _logger.LogDebug($"Data set into Cache");
+                    }
+                }
+                else
+                {
+                    leaveList = result;
+                }
+                leave.TotalLeavesTaken = (double)leaveList?
+                   .Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year && l.IsApproved)
+                   .Sum(l => l.NumberOfDaysLeave) + leave.NumberOfDaysLeave;
+                leave.TotalLeavesLeft = 15 - leave.TotalLeavesTaken;
+
+                if (leave.TotalLeavesLeft < 0)
+                {
+                    if (email != null)
+                    {
+                        EmailAddress userEmailAddress = new EmailAddress
+                        {
+                            To = email.Email,
+                            Subject = $"Leave Not Approved",
+                            Message = $"<html><body><p>Hi {email.Name},</p><p>Your leave from {leave.LeaveStartDate.ToString("dd/MM/yyyy")} to {leave.LeaveEndDate.ToString("dd/MM/yyyy")} is not approved." +
+                            $"</p><p>You don't gave enough leaves .</p>" +
+                            $"<p>You total leave count is {leave.TotalLeavesLeft}.</p>" +
+                            $"<p> Thanks,</p><p> AMS Team.</p></body></html>",
+                        };
+                        await _emailService.SendEmailAsync(userEmailAddress);
+                    }
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Leave not applied", new LeaveDto());
+                }
                 var success = await _genericRepository.UpdateAsync(leave);
                 if (success)
-                {
-                    var result = GetData(CacheKeys.Leave);
-
-                    if (result.IsNullOrEmpty())
-                    {
-                        leaveList = await GetAllAsync();
-                        var isSuccess = SetData(CacheKeys.Leave, leaveList);
-                        if (isSuccess)
-                        {
-                            _logger.LogDebug($"Data set into Cache");
-                        }
-                    }
-                    else
-                    {
-                        leaveList = result;
-                    }
-                    leave.TotalLeavesTaken = (double)leaveList?
-                    .Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year && l.IsApproved)
-                    .Sum(l => l.NumberOfDaysLeave) + leave.NumberOfDaysLeave;
-                    leave.TotalLeavesLeft = 15 - leave.TotalLeavesTaken;
-                    var email = await GetEmailAsync(leave.UserId);
-                    if (leave.TotalLeavesLeft < 0)
-                    {
-                        if (email != null)
-                        {
-                            EmailAddress userEmailAddress = new EmailAddress
-                            {
-                                To = email.Email,
-                                Subject = $"Leave Not Approved",
-                                Message = $"<html><body><p>Hi {email.Name},</p><p>Your leave from {leave.LeaveStartDate.ToString("dd/MM/yyyy")} to {leave.LeaveEndDate.ToString("dd/MM/yyyy")} is not approved." +
-                                $"</p><p>You don't gave enough leaves .</p>" +
-                                $"<p>You total leave count is {leave.TotalLeavesLeft}.</p>" +
-                                $"<p> Thanks,</p><p> AMS Team.</p></body></html>",
-                            };
-                            await _emailService.SendEmailAsync(userEmailAddress);
-                        }
-                        _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                        return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Leave not applied", new LeaveDto());
-                    }
+                {                 
+                   
+                    var attendenceList = GetALlAttendenceByUserIdAsync(leave.UserId);
                     for (var date = leave.LeaveStartDate.Date; date < leave.LeaveEndDate; date = date.AddDays(1))
                     {
+                        var isPresent = attendenceList?.Result.Where(x => x.LoginTime.Date ==  date && x.AttendenceType == "Regular");
+                        foreach(var item in isPresent)
+                        {
+                            await _attendenceRepository.DeleteAsync(item);
+                        }
                         var attendenceRecord = new Attendence
                         {
                             LoginTime = date.AddHours(9),
@@ -225,9 +234,24 @@ namespace AMS.Services.Services
                     _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                     return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.OK, "Leave approved", leaveDto);
                 }
+                var leaveNotApprovedDto = _mapper.Map<LeaveDto>(leave);
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Leave not approved", leaveNotApprovedDto);
+            }
+            if (email != null)
+            {
+                EmailAddress userEmailAddress = new EmailAddress
+                {
+                    To = email.Email,
+                    Subject = $"Leave Not Approved",
+                    Message = $"<html><body><p>Hi {email.Name},</p><p>Your leave from {leave.LeaveStartDate.ToString("dd/MM/yyyy")} to {leave.LeaveEndDate.ToString("dd/MM/yyyy")} is not approved." +
+                    $"</p><p>Please connect with your manager.</p>" +
+                    $"<p> Thanks,</p><p> AMS Team.</p></body></html>",
+                };
+                await _emailService.SendEmailAsync(userEmailAddress);
             }
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Leave not approved", new LeaveDto());
+            return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.OK, "Leave not approved", new LeaveDto());
         }
 
         public async Task<Response<LeaveDto>> DeleteLeaveAsync(int id)
@@ -327,6 +351,12 @@ namespace AMS.Services.Services
             };
             
             return emailDetails;
+        }
+
+        private async Task<IEnumerable<Attendence>> GetALlAttendenceByUserIdAsync(int userId)
+        {
+            var attendenceList = await _attendenceRepository.GetAllAsync();
+            return attendenceList?.Where(x => x.UserId == userId).ToList();
         }
     }
 }
