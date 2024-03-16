@@ -1,8 +1,5 @@
 ﻿using AMS.Controller.Extensions;
-using AMS.Controller.Validators.UserValidators;
 using AMS.Services.Services.IServices;
-using AutoMapper;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
@@ -18,8 +15,8 @@ namespace AMS.Controller.Controllers
 
         public AttendenceController(IAttendenceService service, ILogger<AttendenceController> logger)
         {
-            _service = service;
-            _logger = logger;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpPost("Login/{userId}")]

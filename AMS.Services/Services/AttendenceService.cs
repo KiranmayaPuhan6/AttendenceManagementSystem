@@ -1,4 +1,5 @@
 ﻿using AMS.DtoLibrary.DTO.AttendenceDto;
+using AMS.DtoLibrary.DTO.LeaveDto;
 using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Entities.Infrastructure.Repository.IRepository;
 using AMS.Entities.Models.Domain.Entities;
@@ -22,16 +23,21 @@ namespace AMS.Services.Services
         private readonly IMapper _mapper;
         private readonly ISmsService _smsService;
         private readonly IGenericRepository<User> _userRepository;
+        private readonly IGenericRepository<Leave> _leaveRepository;
+        private readonly ILeaveService _leaveService;
         public AttendenceService(IGenericRepository<Attendence> genericRepository, ICacheService cacheService, IResponseService responseService,
-            ILogger<AttendenceService> logger, IMapper mapper, ISmsService smsService, IGenericRepository<User> userRepository)
+            ILogger<AttendenceService> logger, IMapper mapper, ISmsService smsService, IGenericRepository<User> userRepository, 
+            IGenericRepository<Leave> leaveRepository, ILeaveService leaveService)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
             _responseService = responseService ?? throw new ArgumentNullException(nameof(responseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _smsService = smsService;
-            _userRepository = userRepository;
+            _smsService = smsService ?? throw new ArgumentNullException(nameof(smsService));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _leaveRepository = leaveRepository ?? throw new ArgumentNullException(nameof(leaveRepository));
+            _leaveService = leaveService ?? throw new ArgumentNullException(nameof(leaveService));
         }
 
         public async Task<Response<AttendenceBaseDto>> AttendenceLogIn(int userId)
@@ -103,6 +109,10 @@ namespace AMS.Services.Services
             if (attendance.LogoutTime.HasValue)
             {
                 attendance.TotalLoggedInTime = Math.Round((attendance.LogoutTime.Value - attendance.LoginTime).TotalHours,2);
+                if(attendance.TotalLoggedInTime < 5)
+                {
+                    await ApplyLeaveAsync(attendance.UserId, attendance.LoginTime);
+                }
             }
             else
             {
@@ -223,6 +233,25 @@ namespace AMS.Services.Services
         {
             var user = await _userRepository.GetByIdAsync(userId);
             return user.PhoneNumber;
+        }
+
+        private async Task<bool> ApplyLeaveAsync(int userId,DateTime loginDate)
+        {
+            var leaveList = await _leaveRepository.GetAllAsync();
+            var leave = leaveList?.Where(x => x.UserId == userId && x.LeaveStartDate <= loginDate.Date && x.LeaveEndDate > loginDate.Date).Any();
+            if(!(bool) leave)
+            {
+                LeaveCreationDto leaveCreationDto = new LeaveCreationDto
+                {
+                    LeaveStartDate = loginDate.Date,
+                    LeaveEndDate = loginDate.Date.AddDays(1),
+                    StartHalfDay = true,
+                    UserId = userId
+                };
+                var result = await _leaveService.ApplyLeaveAsync(leaveCreationDto);
+                return result.IsSuccess;
+            }
+            return false;
         }
 
     }

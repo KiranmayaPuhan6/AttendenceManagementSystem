@@ -1,16 +1,14 @@
-﻿using AMS.DtoLibrary.DTO.AttendenceDto;
-using AMS.DtoLibrary.DTO.LeaveDto;
+﻿using AMS.DtoLibrary.DTO.LeaveDto;
 using AMS.Entities.Infrastructure.Repository.IRepository;
 using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Services.IServices;
-using AMS.Services.Utility.HelperMethods;
 using AMS.Services.Utility;
+using AMS.Services.Utility.HelperMethods;
 using AMS.Services.Utility.ResponseModel;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+using Castle.Core.Internal;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using Castle.Core.Internal;
 
 namespace AMS.Services.Services
 {
@@ -33,8 +31,8 @@ namespace AMS.Services.Services
             _responseService = responseService ?? throw new ArgumentNullException(nameof(responseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _emailService = emailService;
-            _userRepository = userRepository;
+            _emailService = emailService ?? throw new ArgumentNullException((nameof(emailService)));
+            _userRepository = userRepository ?? throw new ArgumentNullException((nameof(userRepository)));
         }
 
         public async Task<Response<LeaveBaseDto>> ApplyLeaveAsync(LeaveCreationDto leaveCreationDto)
@@ -62,7 +60,7 @@ namespace AMS.Services.Services
             for(var date = leave.LeaveStartDate.Date; date < leave.LeaveEndDate.Date; date = date.AddDays(1))
             {
                 var appliedLeaveList = leaveList?.Where(l => l.UserId == leave.UserId);
-                var isAlreadyApplied = appliedLeaveList?.Any(l => l.LeaveStartDate <= date && l.LeaveEndDate.AddDays(-1) >= date);
+                var isAlreadyApplied = appliedLeaveList?.Any(l => l.LeaveStartDate <= date && l.LeaveEndDate > date);
                 if((bool)isAlreadyApplied)
                 {
                     _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");

@@ -12,6 +12,10 @@ namespace AMS.Controller.Validators.AttendenceValidators
               .NotEmpty().WithMessage("{PropertyName} should be not empty")
               .Length(2, 25)
               .Must(IsValid).WithMessage("{PropertyName} should be all letters.");
+
+            RuleFor(x => x.UserId)
+                .NotEmpty().WithMessage("User ID is required.")
+                .GreaterThan(0).WithMessage("User ID must be greater than zero.");
         }
 
         private bool IsValid(string attendenceType)
