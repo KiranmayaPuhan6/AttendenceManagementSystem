@@ -1,11 +1,7 @@
 ﻿using AMS.Controller.Extensions;
 using AMS.DtoLibrary.DTO.LeaveDto;
-using AMS.Entities.Data.Context;
-using AMS.Entities.Infrastructure.Repository.IRepository;
-using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 
@@ -20,8 +16,8 @@ namespace AMS.Controller.Controllers
 
         public LeaveController(ILeaveService service, ILogger<LeaveController> logger)
         {
-            _service = service;
-            _logger = logger;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _logger = logger ?? throw new ArgumentNullException(nameof(service));
         }
 
         [HttpPost("ApplyLeave")]

@@ -1,19 +1,15 @@
-﻿using AMS.Entities.Models.Domain.Entities;
+﻿using AMS.DtoLibrary.DTO.UserDto;
+using AMS.Entities.Infrastructure.Repository.IRepository;
+using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Services.IServices;
+using AMS.Services.Utility;
+using AMS.Services.Utility.HelperMethods;
+using AMS.Services.Utility.ResponseModel;
 using AutoMapper;
 using Castle.Core.Internal;
-using Microsoft.Extensions.Configuration;
-using System.Net;
-using AMS.Entities.Infrastructure.Repository.IRepository;
-using AMS.DtoLibrary.DTO.UserDto;
-using AMS.Services.Utility.ResponseModel;
-using BCrypt.Net;
-using AMS.Services.Utility;
-using Microsoft.Extensions.Logging;
-using AMS.Services.Utility.HelperMethods;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace AMS.Services.Services
 {

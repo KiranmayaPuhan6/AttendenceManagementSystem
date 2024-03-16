@@ -17,8 +17,8 @@ namespace AMS.Controller.Controllers
 
         public UserController(IUserService service, ILogger<UserController> logger)
         {
-            _service = service;
-            _logger = logger;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpPost(Name = "CreateNewUser")]

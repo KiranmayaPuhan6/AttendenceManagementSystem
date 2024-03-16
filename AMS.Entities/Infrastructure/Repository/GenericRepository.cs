@@ -1,6 +1,5 @@
 ﻿using AMS.Entities.Data.Context;
 using AMS.Entities.Infrastructure.Repository.IRepository;
-using AMS.Entities.Models.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
