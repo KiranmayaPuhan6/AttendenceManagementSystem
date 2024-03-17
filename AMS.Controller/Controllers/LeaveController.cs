@@ -84,7 +84,7 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpGet(Name = "GetAllLeaves")]
+        [HttpGet("GetAllLeaves")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAllLeavesAsync()
@@ -100,6 +100,22 @@ namespace AMS.Controller.Controllers
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok(result);
+        }
+
+        [HttpPost("ApplyLeaveForHolidays")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ApplyLeavesForHolidaysAsync()
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.ApplyLeavesForHolidaysAsync();
+            if (!result)
+            { 
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return NotFound("No holidays for this year or has been already applied");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Time sheet for holidays has been applied");
         }
 
     }

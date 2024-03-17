@@ -22,8 +22,9 @@ namespace AMS.Services.Services
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
         private readonly IGenericRepository<User> _userRepository;
+        private readonly IGenericRepository<Holidays> _holidayRepository;
         public LeaveService(IGenericRepository<Leave> genericRepository, IGenericRepository<Attendence> attendenceRepository, ICacheService cacheService, IResponseService responseService,
-            ILogger<LeaveService> logger, IMapper mapper, IEmailService emailService, IGenericRepository<User> userRepository)
+            ILogger<LeaveService> logger, IMapper mapper, IEmailService emailService, IGenericRepository<User> userRepository, IGenericRepository<Holidays> holidayRepository)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
             _attendenceRepository = attendenceRepository ?? throw new ArgumentNullException(nameof(attendenceRepository));
@@ -31,14 +32,23 @@ namespace AMS.Services.Services
             _responseService = responseService ?? throw new ArgumentNullException(nameof(responseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _emailService = emailService ?? throw new ArgumentNullException((nameof(emailService)));
-            _userRepository = userRepository ?? throw new ArgumentNullException((nameof(userRepository)));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _holidayRepository = holidayRepository ?? throw new ArgumentNullException(nameof(holidayRepository));
         }
 
         public async Task<Response<LeaveBaseDto>> ApplyLeaveAsync(LeaveCreationDto leaveCreationDto)
         {
             IEnumerable<Leave> leaveList;
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var holidays = _holidayRepository.GetAllAsync();
+            var isPresentHoliday = holidays.Result.Where(x => x.Holiday.Date >= leaveCreationDto.LeaveStartDate.Date && x.Holiday.Date < leaveCreationDto.LeaveEndDate);
+            if(isPresentHoliday.Any())
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, $"{isPresentHoliday.FirstOrDefault().Holiday.ToString("dd/MM/yyyy")} is a holiday", new LeaveBaseDto());
+            }
 
             var leave = _mapper.Map<Leave>(leaveCreationDto);
 
@@ -103,6 +113,7 @@ namespace AMS.Services.Services
             }
 
             leave.IsApproved = false;
+            leave.LeaveType = "Leave";
 
             var success = await _genericRepository.CreateAsync(leave);
 
@@ -341,6 +352,52 @@ namespace AMS.Services.Services
             return await _responseService.ResponseDtoFormatterAsync<LeaveDto>(true, (int)HttpStatusCode.OK, "Success", leaveDtoList);
         }
 
+        public async Task<bool> ApplyLeavesForHolidaysAsync()
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                var holidays = await _holidayRepository.GetAllAsync();
+                if (holidays.Any())
+                {
+                    var users = await _userRepository.GetAllAsync();
+                    foreach (var user in users)
+                    {
+                        var leavesList = await _genericRepository.GetAllAsync();
+
+                        foreach (var holiday in holidays)
+                        {
+                            var isPresent = leavesList.Where(x => x.LeaveStartDate == holiday.Holiday && x.UserId == user.UserID && x.LeaveType == "Holiday").Any();
+                            if(isPresent)
+                            {
+                                continue;
+                            }
+                            Leave leave = new Leave
+                            {
+                                LeaveStartDate = holiday.Holiday,
+                                LeaveEndDate = holiday.Holiday.AddDays(1),
+                                StartHalfDay = false,
+                                IsApproved = true,
+                                LeaveType = "Holiday",
+                                UserId = user.UserID
+                            };
+                             await _genericRepository.CreateAsync(leave);
+
+                             var attendenceRecord = new Attendence
+                             {
+                                 LoginTime = holiday.Holiday.AddHours(9),
+                                 LogoutTime = holiday.Holiday.AddHours(17),
+                                 TotalLoggedInTime = 8,
+                                 AttendenceType = "Holiday",
+                                 UserId = user.UserID
+                             };
+                            await _attendenceRepository.CreateAsync(attendenceRecord);
+                        }
+                    }
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                    return true;
+                }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
+        }
         private async Task<IEnumerable<Leave>> GetAllAsync()
         {
             return await _genericRepository.GetAllAsync();

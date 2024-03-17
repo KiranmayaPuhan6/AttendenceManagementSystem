@@ -17,6 +17,7 @@ namespace AMS.Entities.Models.Domain.Entities
         public double TotalLeavesTaken { get; set; }
         public double TotalLeavesLeft { get; set; }
         public bool IsApproved { get; set; }
+        public string LeaveType { get; set; }
         public int UserId { get; set; }
         public User User { get; set; }
     }
