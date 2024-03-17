@@ -60,6 +60,13 @@ namespace AMS.Services.Services
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Today is Hoiday", new AttendenceBaseDto());
             }
+            var allAttendence = await GetAllAsync();
+            var isAlreadyPresent = allAttendence.Where(x => x.UserId == userId && x.LoginTime.Date == attendance.LoginTime.Date && x.AttendenceType == "Regular");
+            if(isAlreadyPresent.Any())
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Attendence already logged in", new AttendenceBaseDto());
+            }
             var result = await _genericRepository.CreateAsync(attendance);
 
             if (result)

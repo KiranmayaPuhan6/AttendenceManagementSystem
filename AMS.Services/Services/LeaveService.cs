@@ -90,7 +90,7 @@ namespace AMS.Services.Services
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "End Date cannot be less than Start Date", new LeaveBaseDto());
             }
 
-            leave.TotalLeavesTaken = (leaveList.Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year && l.IsApproved)
+            leave.TotalLeavesTaken = (leaveList.Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year )
              .Sum(l => l.NumberOfDaysLeave));
             leave.TotalLeavesLeft = 15 - leave.TotalLeavesTaken;
 
