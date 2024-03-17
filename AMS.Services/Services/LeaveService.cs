@@ -69,15 +69,15 @@ namespace AMS.Services.Services
             }
             for(var date = leave.LeaveStartDate.Date; date < leave.LeaveEndDate.Date; date = date.AddDays(1))
             {
-                var appliedLeaveList = leaveList?.Where(l => l.UserId == leave.UserId);
-                var isAlreadyApplied = appliedLeaveList?.Any(l => l.LeaveStartDate <= date && l.LeaveEndDate > date);
-                if((bool)isAlreadyApplied)
+                var appliedLeaveList = leaveList.Where(l => l.UserId == leave.UserId);
+                var isAlreadyApplied = appliedLeaveList.Any(l => l.LeaveStartDate <= date && l.LeaveEndDate > date);
+                if(isAlreadyApplied)
                 {
                     _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                     return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Leave Already Applied", new LeaveBaseDto());
                 }
             }
-            //var appliedLeaveList = leaveList?.Where(x =>  x.LeaveStartDate  && x.LeaveEndDate < leaveCreationDto.LeaveEndDate && x.UserId = leaveCreationDto.UserId);
+           
             leave.NumberOfDaysLeave = (leave.LeaveEndDate - leave.LeaveStartDate).TotalDays;
             
             if (leave.StartHalfDay)
@@ -90,7 +90,7 @@ namespace AMS.Services.Services
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "End Date cannot be less than Start Date", new LeaveBaseDto());
             }
 
-            leave.TotalLeavesTaken = (double)(leaveList?.Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year && l.IsApproved)
+            leave.TotalLeavesTaken = (leaveList.Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year && l.IsApproved)
              .Sum(l => l.NumberOfDaysLeave));
             leave.TotalLeavesLeft = 15 - leave.TotalLeavesTaken;
 
@@ -192,7 +192,7 @@ namespace AMS.Services.Services
                 {
                     leaveList = result;
                 }
-                leave.TotalLeavesTaken = (double)leaveList?
+                leave.TotalLeavesTaken = leaveList
                    .Where(l => l.UserId == leave.UserId && l.LeaveStartDate.Year == DateTime.Now.Year && l.IsApproved)
                    .Sum(l => l.NumberOfDaysLeave) + leave.NumberOfDaysLeave;
                 leave.TotalLeavesLeft = 15 - leave.TotalLeavesTaken;
@@ -235,7 +235,7 @@ namespace AMS.Services.Services
                         await _attendenceRepository.CreateAsync(halfDayttendenceRecord);
                         for (var date = leave.LeaveStartDate.Date; date < endDate; date = date.AddDays(1))
                         {
-                            var isPresent = attendenceList?.Result.Where(x => x.LoginTime.Date == date && x.AttendenceType == "Regular" && x.TotalLoggedInTime >= 5);
+                            var isPresent = attendenceList.Result.Where(x => x.LoginTime.Date == date && x.AttendenceType == "Regular" && x.TotalLoggedInTime >= 5);
                             foreach (var item in isPresent)
                             {
                                 await _attendenceRepository.DeleteAsync(item);
@@ -436,7 +436,7 @@ namespace AMS.Services.Services
         private async Task<IEnumerable<Attendence>> GetALlAttendenceByUserIdAsync(int userId)
         {
             var attendenceList = await _attendenceRepository.GetAllAsync();
-            return attendenceList?.Where(x => x.UserId == userId).ToList();
+            return attendenceList.Where(x => x.UserId == userId).ToList();
         }
     }
 }

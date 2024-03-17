@@ -247,8 +247,8 @@ namespace AMS.Services.Services
         private async Task<bool> ApplyLeaveAsync(int userId,DateTime loginDate)
         {
             var leaveList = await _leaveRepository.GetAllAsync();
-            var leave = leaveList?.Where(x => x.UserId == userId && x.LeaveStartDate <= loginDate.Date && x.LeaveEndDate > loginDate.Date).Any();
-            if(!(bool) leave)
+            var leave = leaveList.Where(x => x.UserId == userId && x.LeaveStartDate <= loginDate.Date && x.LeaveEndDate > loginDate.Date).Any();
+            if(!leave)
             {
                 LeaveCreationDto leaveCreationDto = new LeaveCreationDto
                 {
