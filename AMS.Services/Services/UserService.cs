@@ -60,10 +60,12 @@ namespace AMS.Services.Services
                 Address = user.Address,
                 Gender = user.Gender,
                 Email = user.Email,
+                IsEmailConfirmed = false,
                 Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
                 Role = user.Role,
                 Name = user.Name,
                 PhoneNumber = user.PhoneNumber,
+                IsPhoneNumberConfirmed = false,
                 ActualFileUrl = path
             };
             var result = await _genericRepository.CreateAsync(userModel);
@@ -269,6 +271,53 @@ namespace AMS.Services.Services
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.OK, "Success", userDto);
+        }
+
+        public async Task<bool> VerifyEmailAsync(int userId, int token)
+        {
+            var user = await _genericRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+            if (user.PasswordResetToken == token && DateTime.Now < user.ResetTokenExpires)
+            {
+                user.PasswordResetToken = null;
+                user.ResetTokenExpires = null;
+                user.IsEmailConfirmed = true;
+                var success = await _genericRepository.UpdateAsync(user);
+                if(success)
+                {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        public async Task<bool> VerificationCodeForEmailAsync(int userId)
+        {
+            var generatedNumber = RandomNumberGenerator.Generate(100000, 999999);
+            var user = await _genericRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+            user.PasswordResetToken = generatedNumber;
+            user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
+            EmailAddress emailAddress = new EmailAddress
+            {
+                To = user.Email,
+                Subject = "Verify your email",
+                Message = $"<html><body><p>Your verification code is {generatedNumber}.</p><p>It is valid for 30 minutes.</p></body></html>"
+            };
+            await _emailService.SendEmailAsync(emailAddress);
+            var success = await _genericRepository.UpdateAsync(user);
+            if (success)
+            {
+                return true;
+            }
+            return false;
         }
 
         private async Task<IEnumerable<User>> GetAllAsync()
