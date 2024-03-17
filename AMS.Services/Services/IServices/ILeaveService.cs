@@ -9,5 +9,6 @@ namespace AMS.Services.Services.IServices
         Task<Response<LeaveDto>> ApproveLeaveAsync(LeaveUpdateDto leaveUpdateDto);
         Task<ResponseList<LeaveDto>> GetAllLeavesAsync();
         Task<Response<LeaveDto>> DeleteLeaveAsync(int id);
+        Task<bool> ApplyLeavesForHolidaysAsync();
     }
 }

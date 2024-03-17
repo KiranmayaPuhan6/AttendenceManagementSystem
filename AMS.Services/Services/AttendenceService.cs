@@ -10,6 +10,7 @@ using AMS.Services.Utility.ResponseModel;
 using AutoMapper;
 using Castle.Core.Internal;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using System.Net;
 
 namespace AMS.Services.Services
@@ -24,10 +25,11 @@ namespace AMS.Services.Services
         private readonly ISmsService _smsService;
         private readonly IGenericRepository<User> _userRepository;
         private readonly IGenericRepository<Leave> _leaveRepository;
+        private readonly IGenericRepository<Holidays> _holidayRepository;
         private readonly ILeaveService _leaveService;
         public AttendenceService(IGenericRepository<Attendence> genericRepository, ICacheService cacheService, IResponseService responseService,
             ILogger<AttendenceService> logger, IMapper mapper, ISmsService smsService, IGenericRepository<User> userRepository, 
-            IGenericRepository<Leave> leaveRepository, ILeaveService leaveService)
+            IGenericRepository<Leave> leaveRepository, ILeaveService leaveService, IGenericRepository<Holidays> holidayRepository)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -38,6 +40,7 @@ namespace AMS.Services.Services
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _leaveRepository = leaveRepository ?? throw new ArgumentNullException(nameof(leaveRepository));
             _leaveService = leaveService ?? throw new ArgumentNullException(nameof(leaveService));
+            _holidayRepository = holidayRepository ?? throw new ArgumentNullException(nameof(holidayRepository));
         }
 
         public async Task<Response<AttendenceBaseDto>> AttendenceLogIn(int userId)
@@ -50,7 +53,13 @@ namespace AMS.Services.Services
                 LoginTime = DateTime.Now,
                 AttendenceType = "Regular"
             };
-
+            var holidays = await _holidayRepository.GetAllAsync();
+            var todayHoliday = holidays?.Where(x => x.Holiday == attendance.LoginTime.Date);
+            if(todayHoliday.Any())
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Today is Hoiday", new AttendenceBaseDto());
+            }
             var result = await _genericRepository.CreateAsync(attendance);
 
             if (result)

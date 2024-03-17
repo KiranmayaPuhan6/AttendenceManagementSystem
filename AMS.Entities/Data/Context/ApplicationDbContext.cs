@@ -43,5 +43,6 @@ namespace AMS.Entities.Data.Context
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Attendence> Attendences { get; set; }
         public virtual DbSet<Leave> Leaves { get; set; }
+        public virtual DbSet<Holidays> Holidays { get; set; }
     }
 }
