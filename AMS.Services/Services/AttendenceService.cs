@@ -47,6 +47,13 @@ namespace AMS.Services.Services
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
 
+            var user = await _userRepository.GetByIdAsync(userId);
+            if(!user.IsEmailConfirmed || !user.IsPhoneNumberConfirmed)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Verify your email and phone number first.", new AttendenceBaseDto());
+            }
+
             var attendance = new Attendence
             {
                 UserId = userId,
@@ -54,11 +61,18 @@ namespace AMS.Services.Services
                 AttendenceType = "Regular"
             };
             var holidays = await _holidayRepository.GetAllAsync();
-            var todayHoliday = holidays?.Where(x => x.Holiday == attendance.LoginTime.Date);
+            var todayHoliday = holidays.Where(x => x.Holiday == attendance.LoginTime.Date);
             if(todayHoliday.Any())
             {
-                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Today is Hoiday", new AttendenceBaseDto());
+            }
+            var allAttendence = await GetAllAsync();
+            var isAlreadyPresent = allAttendence.Where(x => x.UserId == userId && x.LoginTime.Date == attendance.LoginTime.Date && x.AttendenceType == "Regular");
+            if(isAlreadyPresent.Any())
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Attendence already logged in", new AttendenceBaseDto());
             }
             var result = await _genericRepository.CreateAsync(attendance);
 
@@ -247,8 +261,8 @@ namespace AMS.Services.Services
         private async Task<bool> ApplyLeaveAsync(int userId,DateTime loginDate)
         {
             var leaveList = await _leaveRepository.GetAllAsync();
-            var leave = leaveList?.Where(x => x.UserId == userId && x.LeaveStartDate <= loginDate.Date && x.LeaveEndDate > loginDate.Date).Any();
-            if(!(bool) leave)
+            var leave = leaveList.Where(x => x.UserId == userId && x.LeaveStartDate <= loginDate.Date && x.LeaveEndDate > loginDate.Date).Any();
+            if(!leave)
             {
                 LeaveCreationDto leaveCreationDto = new LeaveCreationDto
                 {

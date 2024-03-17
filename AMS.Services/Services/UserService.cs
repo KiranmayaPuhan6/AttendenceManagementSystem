@@ -22,8 +22,9 @@ namespace AMS.Services.Services
         private readonly IMapper _mapper;
         private readonly IImageService _imageService;
         private readonly IEmailService _emailService;
+        private readonly ISmsService _smsService;
         public UserService(IGenericRepository<User> genericRepository, ICacheService cacheService, IResponseService responseService, 
-            ILogger<UserService> logger, IMapper mapper, IImageService imageService, IEmailService emailService)
+            ILogger<UserService> logger, IMapper mapper, IImageService imageService, IEmailService emailService, ISmsService smsService)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -32,6 +33,7 @@ namespace AMS.Services.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _smsService = smsService ?? throw new ArgumentNullException(nameof(smsService));
         }
 
         public async Task<Response<UserBaseDto>> CreateNewUserAsync(UserCreationDto userCreationDto)
@@ -60,10 +62,12 @@ namespace AMS.Services.Services
                 Address = user.Address,
                 Gender = user.Gender,
                 Email = user.Email,
+                IsEmailConfirmed = false,
                 Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
                 Role = user.Role,
                 Name = user.Name,
                 PhoneNumber = user.PhoneNumber,
+                IsPhoneNumberConfirmed = false,
                 ActualFileUrl = path
             };
             var result = await _genericRepository.CreateAsync(userModel);
@@ -269,6 +273,126 @@ namespace AMS.Services.Services
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.OK, "Success", userDto);
+        }
+
+        public async Task<bool> VerifyEmailAsync(int userId, int token)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var user = await _genericRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+            if (user.PasswordResetToken == token && DateTime.Now < user.ResetTokenExpires)
+            {
+                user.PasswordResetToken = null;
+                user.ResetTokenExpires = null;
+                user.IsEmailConfirmed = true;
+                var success = await _genericRepository.UpdateAsync(user);
+                if(success)
+                {
+                    var userList = await GetAllAsync();
+                    var isSuccess = SetData(CacheKeys.User, userList);
+
+                    if (isSuccess)
+                    {
+                        _logger.LogDebug($"Data set into Cache");
+                    }
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                    return true;
+                }
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return false;
+            }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
+        }
+
+        public async Task<bool> VerificationCodeForEmailAsync(int userId)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var generatedNumber = RandomNumberGenerator.Generate(100000, 999999);
+            var user = await _genericRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return false;
+            }
+            user.PasswordResetToken = generatedNumber;
+            user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
+            EmailAddress emailAddress = new EmailAddress
+            {
+                To = user.Email,
+                Subject = "Verify your email",
+                Message = $"<html><body><p>Your verification code is {generatedNumber}.</p><p>It is valid for 30 minutes.</p></body></html>"
+            };
+            await _emailService.SendEmailAsync(emailAddress);
+            var success = await _genericRepository.UpdateAsync(user);
+            if (success)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return true;
+            }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
+        }
+
+        public async Task<bool> VerifyPhoneNumberAsync(int userId, int token)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var user = await _genericRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return false;
+            }
+            if (user.PasswordResetToken == token && DateTime.Now < user.ResetTokenExpires)
+            {
+                user.PasswordResetToken = null;
+                user.ResetTokenExpires = null;
+                user.IsPhoneNumberConfirmed = true;
+                var success = await _genericRepository.UpdateAsync(user);
+                if (success)
+                {
+                    var userList = await GetAllAsync();
+                    var isSuccess = SetData(CacheKeys.User, userList);
+
+                    if (isSuccess)
+                    {
+                        _logger.LogDebug($"Data set into Cache");
+                    }
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                    return true;
+                }
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return false;
+            }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
+        }
+
+        public async Task<bool> VerificationCodeForPhoneNumberAsync(int userId)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var generatedNumber = RandomNumberGenerator.Generate(100000, 999999);
+            var user = await _genericRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return false;
+            }
+            user.PasswordResetToken = generatedNumber;
+            user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
+            await _smsService.SendMessageAsync(user.PhoneNumber,$"Your verification code is {generatedNumber} . This is valid for 30 mins.");
+            var success = await _genericRepository.UpdateAsync(user);
+            if (success)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return true;
+            }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
         }
 
         private async Task<IEnumerable<User>> GetAllAsync()

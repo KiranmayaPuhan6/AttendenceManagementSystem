@@ -135,5 +135,73 @@ namespace AMS.Controller.Controllers
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok(result);
         }
+
+        [HttpPost("VerificationCodeForEmail")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> VerificationCodeForEmailAsync(int userId)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.VerificationCodeForEmailAsync(userId);
+            if (!result)
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest("Provide a valid email");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Verification code sent to registered emailaddress");
+        }
+
+        [HttpPost("VerifyEmail")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> VerifyEmailAsync(int userId, int token)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.VerifyEmailAsync(userId, token);
+            if (!result)
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest("Token is incorrect.");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Email Verified");
+        }
+
+        [HttpPost("VerificationCodeForPhoneNumber")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> VerificationCodeForPhoneNumberAsync(int userId)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.VerificationCodeForPhoneNumberAsync(userId);
+            if (!result)
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest("Provide a valid phone-number");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Verification code sent to registered phone-number");
+        }
+
+        [HttpPost("VerifyPhoneNumber")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> VerifyPhoneNumberAsync(int userId, int token)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.VerifyPhoneNumberAsync(userId, token);
+            if (!result)
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest("Token is incorrect.");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("PhoneNumber Verified");
+        }
     }
 }
