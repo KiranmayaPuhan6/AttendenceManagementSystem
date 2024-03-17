@@ -54,7 +54,7 @@ namespace AMS.Services.Services
                 AttendenceType = "Regular"
             };
             var holidays = await _holidayRepository.GetAllAsync();
-            var todayHoliday = holidays?.Where(x => x.Holiday == attendance.LoginTime.Date);
+            var todayHoliday = holidays.Where(x => x.Holiday == attendance.LoginTime.Date);
             if(todayHoliday.Any())
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
