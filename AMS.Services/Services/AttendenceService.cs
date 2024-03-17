@@ -47,6 +47,13 @@ namespace AMS.Services.Services
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
 
+            var user = await _userRepository.GetByIdAsync(userId);
+            if(!user.IsEmailConfirmed || !user.IsPhoneNumberConfirmed)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Verify your email and phone number first.", new AttendenceBaseDto());
+            }
+
             var attendance = new Attendence
             {
                 UserId = userId,
@@ -57,7 +64,7 @@ namespace AMS.Services.Services
             var todayHoliday = holidays.Where(x => x.Holiday == attendance.LoginTime.Date);
             if(todayHoliday.Any())
             {
-                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Today is Hoiday", new AttendenceBaseDto());
             }
             var allAttendence = await GetAllAsync();

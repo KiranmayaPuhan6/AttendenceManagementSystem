@@ -1,4 +1,5 @@
-﻿using AMS.DtoLibrary.DTO.LeaveDto;
+﻿using AMS.DtoLibrary.DTO.AttendenceDto;
+using AMS.DtoLibrary.DTO.LeaveDto;
 using AMS.Entities.Infrastructure.Repository.IRepository;
 using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Services.IServices;
@@ -41,6 +42,13 @@ namespace AMS.Services.Services
         {
             IEnumerable<Leave> leaveList;
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var user = await _userRepository.GetByIdAsync(leaveCreationDto.UserId);
+            if (!user.IsEmailConfirmed || !user.IsPhoneNumberConfirmed)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Verify your email and phone number first.", new LeaveBaseDto());
+            }
 
             var holidays = _holidayRepository.GetAllAsync();
             var isPresentHoliday = holidays.Result.Where(x => x.Holiday.Date >= leaveCreationDto.LeaveStartDate.Date && x.Holiday.Date < leaveCreationDto.LeaveEndDate);
