@@ -1,4 +1,5 @@
 ﻿using AMS.DtoLibrary.DTO.UserDto;
+using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Utility.ResponseModel;
 
 namespace AMS.Services.Services.IServices
@@ -14,5 +15,6 @@ namespace AMS.Services.Services.IServices
         Task<bool> VerificationCodeForEmailAsync(int userId);
         Task<bool> VerifyPhoneNumberAsync(int userId, int token);
         Task<bool> VerificationCodeForPhoneNumberAsync(int userId);
+        Task<IEnumerable<User>> GetAllUsersAsync();
     }
 }

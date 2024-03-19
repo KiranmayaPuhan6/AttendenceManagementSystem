@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AMS.Services\AMS.Services.csproj" />
+    <ProjectReference Include="..\JwtAuthenticationManager\JwtAuthenticationManager.csproj" />
   </ItemGroup>
 
   <ItemGroup>

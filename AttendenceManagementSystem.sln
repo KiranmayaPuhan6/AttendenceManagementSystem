@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AMS.Entities", "AMS.Entitie
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepositoryTests", "RepositoryTests", "{E80F5B9B-201E-43F8-A694-3DDD40721255}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JwtAuthenticationManager", "JwtAuthenticationManager\JwtAuthenticationManager.csproj", "{50408EBE-0F63-4435-9214-F9F1DA014083}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{57516D4C-CF1B-4856-816D-F118D6582569}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57516D4C-CF1B-4856-816D-F118D6582569}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57516D4C-CF1B-4856-816D-F118D6582569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50408EBE-0F63-4435-9214-F9F1DA014083}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50408EBE-0F63-4435-9214-F9F1DA014083}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50408EBE-0F63-4435-9214-F9F1DA014083}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50408EBE-0F63-4435-9214-F9F1DA014083}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +61,7 @@ Global
 		{65A30C75-A168-4E5C-94AC-E48BF6D0A53B} = {16E46986-E3BC-45A3-8143-366B6557E57B}
 		{57516D4C-CF1B-4856-816D-F118D6582569} = {16E46986-E3BC-45A3-8143-366B6557E57B}
 		{E80F5B9B-201E-43F8-A694-3DDD40721255} = {0D7F0CB1-05B2-4F5D-84B0-AE3954871757}
+		{50408EBE-0F63-4435-9214-F9F1DA014083} = {16E46986-E3BC-45A3-8143-366B6557E57B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {38CD0DD6-4586-4386-81D6-16CCF9D97840}

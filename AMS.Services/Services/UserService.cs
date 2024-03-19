@@ -395,6 +395,14 @@ namespace AMS.Services.Services
             return false;
         }
 
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var users = await _genericRepository.GetAllAsync();
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return users;
+        }
+
         private async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _genericRepository.GetAllAsync(predicate: null,includes: q => q.Include(u => u.Attendence).Include(u => u.Leave));
