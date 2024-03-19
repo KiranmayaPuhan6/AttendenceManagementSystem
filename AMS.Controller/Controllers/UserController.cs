@@ -102,6 +102,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles ="Admin,Employee,Manager")]
         public async Task<ActionResult> UpdateUserAsync([FromForm] UserUpdateDto userUpdateDto)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -129,6 +130,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteUserAsync(int id)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -154,6 +156,7 @@ namespace AMS.Controller.Controllers
         [HttpGet("id/{id}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Employee,Manager")]
         public async Task<ActionResult> ReadApiConfigResponseAsync(int id)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -173,6 +176,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin,Employee,Manager")]
         public async Task<ActionResult> VerificationCodeForEmailAsync(int userId)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -190,6 +194,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin,Employee,Manager")]
         public async Task<ActionResult> VerifyEmailAsync(int userId, int token)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -207,6 +212,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin,Employee,Manager")]
         public async Task<ActionResult> VerificationCodeForPhoneNumberAsync(int userId)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -224,6 +230,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin,Employee,Manager")]
         public async Task<ActionResult> VerifyPhoneNumberAsync(int userId, int token)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");

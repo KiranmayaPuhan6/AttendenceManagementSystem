@@ -40,12 +40,20 @@ namespace AMS.Services.Services
         {
             string path;
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var allUsers = await GetAllAsync();
+            var isEmailPresent = allUsers.Where(x => x.Email == userCreationDto.Email).Any();
+            if(isEmailPresent )
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Email already taken", new UserBaseDto());
+            }
             var user = _mapper.Map<User>(userCreationDto);
             if (user.FileUri != null)
             {
                 path = await _imageService.UploadImageAsync(user.FileUri);
                 if (path == "Not a valid type")
                 {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                     return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error image type", new UserBaseDto());
                 }
             }
