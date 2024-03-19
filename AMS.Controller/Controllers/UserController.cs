@@ -4,6 +4,7 @@ using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Services.Services.IServices;
 using JwtAuthenticationManager;
 using JwtAuthenticationManager.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
@@ -43,6 +44,7 @@ namespace AMS.Controller.Controllers
 
         [HttpGet("Validate")]
         [SwaggerResponse(StatusCodes.Status200OK)]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> GetAllUserAsync()
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -80,6 +82,7 @@ namespace AMS.Controller.Controllers
         [HttpGet(Name = "ReadAllUser")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [Authorize(Roles ="Admin")]
         public async Task<ActionResult> ReadAllUserAsync()
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
