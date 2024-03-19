@@ -2,6 +2,8 @@
 using AMS.Controller.Validators.UserValidators;
 using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Services.Services.IServices;
+using JwtAuthenticationManager;
+using JwtAuthenticationManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
@@ -14,11 +16,39 @@ namespace AMS.Controller.Controllers
     {
         private readonly IUserService _service;
         private readonly ILogger<UserController> _logger;
+        private readonly JwtTokenHandler _jwtAuthenticationManager;
 
-        public UserController(IUserService service, ILogger<UserController> logger)
+        public UserController(IUserService service, ILogger<UserController> logger, JwtTokenHandler jwtAuthenticationManager)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _jwtAuthenticationManager = jwtAuthenticationManager ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        [HttpPost("Authenticate")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> LoginUser([FromBody] AuthenticationRequest _user)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var authenticationResponse =await _jwtAuthenticationManager.GenerateToken(_user);
+            if (authenticationResponse == null)
+            {
+                _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return Unauthorized();
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok(authenticationResponse);
+        }
+
+        [HttpGet("Validate")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        public async Task<ActionResult> GetAllUserAsync()
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.GetAllUsersAsync();
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok(result);
         }
 
         [HttpPost(Name = "CreateNewUser")]

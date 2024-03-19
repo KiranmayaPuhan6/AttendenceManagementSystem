@@ -3,10 +3,15 @@ using AMS.Services.ServiceRegistration;
 using AMS.Controller.Extensions;
 using FluentValidation.AspNetCore;
 using System.Reflection;
+using JwtAuthenticationManager;
+using JwtAuthenticationManager.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddServices(builder.Configuration);
+
+builder.Services.AddCustomJwtAuthentication();
+builder.Services.AddSingleton<JwtTokenHandler>();
 
 var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
