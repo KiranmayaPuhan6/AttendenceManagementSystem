@@ -2,6 +2,8 @@
 using AMS.Controller.Validators.UserValidators;
 using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Services.Services.IServices;
+using AMS.Services.Utility;
+using Castle.Core.Internal;
 using JwtAuthenticationManager;
 using JwtAuthenticationManager.Models;
 using JwtAuthenticationManager.Utility;
@@ -50,11 +52,13 @@ namespace AMS.Controller.Controllers
         [Authorize(Roles = "Admin,Employee,Manager")]
         public IActionResult Refresh(TokenResponse tokenResponse)
         {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var response = TokenUtils.GenerateAccessTokenFromRefreshToken(tokenResponse);
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok(response);
         }
 
-        [HttpGet("Validate")]
+        [HttpGet("Validate/aec19c47-f1f4-4801-87a4-199f44443a5d")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> GetAllUserAsync()
@@ -136,6 +140,25 @@ namespace AMS.Controller.Controllers
             _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok(result);
+        }
+
+        [HttpPut("UpdateRole")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> UpdateRoleAsync(UpdateRole role)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = await _service.UpdateRoleAsync(role);
+            if (result.IsNullOrEmpty())
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return NotFound("User not found");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Role changed");
         }
 
         [HttpDelete("id/{id}")]

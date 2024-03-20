@@ -184,7 +184,7 @@ namespace AMS.Services.Services
                 Gender = user.Gender,
                 Email = user.Email,
                 Password = userInfo.Password,
-                Role = user.Role,
+                Role = userInfo.Role,
                 Name = user.Name,
                 PhoneNumber = user.PhoneNumber,
                 ActualFileUrl = path
@@ -208,6 +208,32 @@ namespace AMS.Services.Services
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "Error", new UserBaseDto());
+        }
+
+        public async Task<string> UpdateRoleAsync(UpdateRole role)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var user = await _genericRepository.GetByIdAsync(role.UserId);
+            if (user == null)
+            {
+                return null;
+            }
+            user.Role = role.Role;
+            var result = await _genericRepository.UpdateAsync(user);
+
+            if (result)
+            {
+                var userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return $"Role Changed for {user.Name}";
+            }
+            return null;
         }
 
         public async Task<Response<UserDto>> DeleteUserAsync(int id)
