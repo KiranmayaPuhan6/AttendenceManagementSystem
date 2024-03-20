@@ -1,4 +1,5 @@
-﻿using AMS.DtoLibrary.DTO.UserDto;
+﻿using AMS.DtoLibrary.DTO.ManagerDto;
+using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Entities.Infrastructure.Repository.IRepository;
 using AMS.Entities.Models.Domain.Entities;
 using AMS.Services.Services.IServices;
@@ -16,6 +17,7 @@ namespace AMS.Services.Services
     public class UserService : IUserService
     {
         private readonly IGenericRepository<User> _genericRepository;
+        private readonly IGenericRepository<Manager> _managerRepository;
         private readonly ICacheService _cacheService;
         private readonly IResponseService _responseService;
         private readonly ILogger<UserService> _logger;
@@ -23,10 +25,11 @@ namespace AMS.Services.Services
         private readonly IImageService _imageService;
         private readonly IEmailService _emailService;
         private readonly ISmsService _smsService;
-        public UserService(IGenericRepository<User> genericRepository, ICacheService cacheService, IResponseService responseService, 
+        public UserService(IGenericRepository<User> genericRepository,IGenericRepository<Manager> managerRepository, ICacheService cacheService, IResponseService responseService, 
             ILogger<UserService> logger, IMapper mapper, IImageService imageService, IEmailService emailService, ISmsService smsService)
         {
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
+            _managerRepository = managerRepository ?? throw new ArgumentNullException(nameof(managerRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
             _responseService = responseService ?? throw new ArgumentNullException(nameof(responseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -61,6 +64,24 @@ namespace AMS.Services.Services
             {
                 path = null;
             }
+
+            if (user.Role == "Manager")
+            {
+                var managerCreationDto = new ManagerCreationDto
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                };
+                var manager = _mapper.Map<Manager>(managerCreationDto);
+                var success =await _managerRepository.CreateAsync(manager);
+                if (!success)
+                {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error", new UserBaseDto());
+                }
+            }
+
             var userModel = new User()
             {
                 Company = user.Company,
@@ -178,17 +199,31 @@ namespace AMS.Services.Services
                 UserID = userUpdateDto.UserId,
                 Company = user.Company,
                 Designation = user.Designation,
-                ManagerName = user.ManagerName,
-                ManagerEmail = user.ManagerEmail,
+                ManagerName = userInfo.ManagerName,
+                ManagerEmail = userInfo.ManagerEmail,
                 Address = user.Address,
                 Gender = user.Gender,
-                Email = user.Email,
+                Email = userInfo.Email,
                 Password = userInfo.Password,
                 Role = userInfo.Role,
                 Name = user.Name,
-                PhoneNumber = user.PhoneNumber,
+                PhoneNumber = userInfo.PhoneNumber,
                 ActualFileUrl = path
             };
+            if (userModel.Role == "Manager")
+            {
+                var managerList = await _managerRepository.GetAllAsync();
+                var manager = managerList.Where(x => x.Email == userInfo.Email).FirstOrDefault();
+                manager.Name = userModel.Name;
+                manager.Email = userModel.Email;
+                var success = await _managerRepository.UpdateAsync(manager);
+                if (!success)
+                {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "Error", new UserBaseDto());
+                }
+            }
             var result = await _genericRepository.UpdateAsync(userModel);
 
             if (result)
@@ -210,7 +245,44 @@ namespace AMS.Services.Services
             return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "Error", new UserBaseDto());
         }
 
-        public async Task<string> UpdateRoleAsync(UpdateRole role)
+        public async Task<Response<UserBaseDto>> UpdateManagerAsync(UserManagerUpdateDto userManagerUpdateDto)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var user = await _genericRepository.GetByIdAsync(userManagerUpdateDto.UserId);
+
+            var managerList = await _managerRepository.GetAllAsync();
+            var manager = managerList.Where(x => x.Email == user.Email).FirstOrDefault();
+            if(user == null || manager  == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error", new UserBaseDto());
+            }
+
+            user.ManagerName = manager.Name;
+            user.ManagerEmail = manager.Email;
+
+            var result =await _genericRepository.UpdateAsync(user);
+
+            if (result)
+            {
+                var userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+
+                var userBaseDto = _mapper.Map<UserBaseDto>(user);
+
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Manager Updated", userBaseDto);
+            }
+
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "Error", new UserBaseDto());
+        }
+
+        public async Task<string> UpdateRoleAsync(UserRoleUpdateDto role)
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var user = await _genericRepository.GetByIdAsync(role.UserId);
@@ -219,6 +291,23 @@ namespace AMS.Services.Services
                 return null;
             }
             user.Role = role.Role;
+
+            if (role.Role == "Manager")
+            {
+                var managerCreationDto = new ManagerCreationDto
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                };
+                var manager = _mapper.Map<Manager>(managerCreationDto);
+                var success = await _managerRepository.CreateAsync(manager);
+                if (!success)
+                {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+
+                    return null;
+                }
+            }
             var result = await _genericRepository.UpdateAsync(user);
 
             if (result)
@@ -245,6 +334,20 @@ namespace AMS.Services.Services
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "RecordsNotFound", new UserDto());
+            }
+
+            if (user.Role == "Manager")
+            {
+                var managerList = await _managerRepository.GetAllAsync();
+                var manager = managerList.Where(x => x.Email ==  user.Email).FirstOrDefault();
+
+                var success = await _managerRepository.DeleteAsync(manager);
+                if (!success)
+                {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "RecordsNotFound", new UserDto());
+                }
             }
 
             var userDto = _mapper.Map<UserDto>(user);

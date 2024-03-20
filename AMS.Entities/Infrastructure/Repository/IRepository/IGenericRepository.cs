@@ -10,7 +10,6 @@ namespace AMS.Entities.Infrastructure.Repository.IRepository
         Task<T> GetByIdAsync(int id);
         Task<bool> UpdateAsync(T entity);
         Task<bool> DeleteAsync(T entity);
-        Task<T> GetByEmailAsync(string email);
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IIncludableQueryable<T, object>> includes = null);
     }
 }

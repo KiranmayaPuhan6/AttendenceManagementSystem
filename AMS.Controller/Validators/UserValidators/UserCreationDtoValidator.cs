@@ -20,15 +20,6 @@ namespace AMS.Controller.Validators.UserValidators
             RuleFor(p => p.Designation)
                .Cascade(CascadeMode.StopOnFirstFailure)
                .NotEmpty().WithMessage("{PropertyName} should be not empty");
-            RuleFor(p => p.ManagerName)
-              .Cascade(CascadeMode.StopOnFirstFailure)
-              .NotEmpty().WithMessage("{PropertyName} should be not empty")
-              .Length(2, 25)
-              .Must(IsValid).WithMessage("{PropertyName} should be all letters.");
-            RuleFor(p => p.ManagerEmail)
-              .Cascade(CascadeMode.StopOnFirstFailure)
-              .NotEmpty().WithMessage("{PropertyName} should be not empty")
-              .EmailAddress();
             RuleFor(p => p.Gender)
                .Cascade(CascadeMode.StopOnFirstFailure)
                .NotEmpty().WithMessage("{PropertyName} should be not empty")
