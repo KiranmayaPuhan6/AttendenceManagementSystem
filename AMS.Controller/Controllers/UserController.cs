@@ -4,6 +4,7 @@ using AMS.DtoLibrary.DTO.UserDto;
 using AMS.Services.Services.IServices;
 using JwtAuthenticationManager;
 using JwtAuthenticationManager.Models;
+using JwtAuthenticationManager.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -33,13 +34,24 @@ namespace AMS.Controller.Controllers
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var authenticationResponse =await _jwtAuthenticationManager.GenerateToken(_user);
+            var refreshToken = TokenUtils.GenerateRefreshToken();
             if (authenticationResponse == null)
             {
                 _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return Unauthorized();
             }
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+           authenticationResponse.RefreshToken = refreshToken;
             return Ok(authenticationResponse);
+        }
+
+        [HttpPost("refresh")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin,Employee,Manager")]
+        public IActionResult Refresh(TokenResponse tokenResponse)
+        {
+            var response = TokenUtils.GenerateAccessTokenFromRefreshToken(tokenResponse);
+            return Ok(response);
         }
 
         [HttpGet("Validate")]
