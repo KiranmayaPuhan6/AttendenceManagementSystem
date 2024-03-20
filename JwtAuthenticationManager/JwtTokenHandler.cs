@@ -12,8 +12,8 @@ namespace JwtAuthenticationManager
     public class JwtTokenHandler
     {
         private readonly ILogger<JwtTokenHandler> _logger;
-        public const string JWT_SECURITY_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY2NDE5OTEyOCwiaWF0IjoxNjY0MTk5MTI4fQ.FZGfQZKyicxnX5NkwWXzPushKnbT9i_3NNThj-sYpUQ";
-        private const int JWT_TOKEN_VALIDITY_MINS = 60;
+        internal const string JWT_SECURITY_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY2NDE5OTEyOCwiaWF0IjoxNjY0MTk5MTI4fQ.FZGfQZKyicxnX5NkwWXzPushKnbT9i_3NNThj-sYpUQ";
+        internal const int JWT_TOKEN_VALIDITY_MINS = 3;
         private List<Account> users;
 
         public JwtTokenHandler(ILogger<JwtTokenHandler> logger)
@@ -44,7 +44,7 @@ namespace JwtAuthenticationManager
             {
                 return null;
             }
-            var tokentExpiryTimeStamp = DateTime.Now.AddMinutes(JWT_TOKEN_VALIDITY_MINS);
+            var tokenExpiryTimeStamp = DateTime.UtcNow.AddMinutes(JWT_TOKEN_VALIDITY_MINS);
             var tokenKey = Encoding.ASCII.GetBytes(JWT_SECURITY_KEY);
             var claimsIdentity = new ClaimsIdentity(new List<Claim>
             {
@@ -58,10 +58,11 @@ namespace JwtAuthenticationManager
             var securityTokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = claimsIdentity,
-                Expires = tokentExpiryTimeStamp,
+                Expires = tokenExpiryTimeStamp,
                 SigningCredentials = signingCredentials
             };
             var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+
             var securityToken = jwtSecurityTokenHandler.CreateToken(securityTokenDescriptor);
             var token = jwtSecurityTokenHandler.WriteToken(securityToken);
 
@@ -69,7 +70,7 @@ namespace JwtAuthenticationManager
             return new AuthenticationResponse
             {
                 Email = user.Email,
-                ExpiresIn = (int)tokentExpiryTimeStamp.Subtract(DateTime.Now).TotalSeconds,
+                ExpiresAt = tokenExpiryTimeStamp.ToLocalTime().TimeOfDay,
                 JwtToken = token,
                 Role = user.Role,
                 UserId = user.UserID,

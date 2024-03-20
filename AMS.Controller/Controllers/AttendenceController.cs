@@ -1,5 +1,6 @@
 ﻿using AMS.Controller.Extensions;
 using AMS.Services.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
@@ -23,6 +24,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Employee,Manager")]
         public async Task<IActionResult> AttendenceLogIn(int userId)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -43,6 +45,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Employee,Manager")]
         public async Task<IActionResult> AttendenceLogOut(int userId)
         {
             var result = await _service.AttendenceLogOut(userId);
@@ -60,6 +63,7 @@ namespace AMS.Controller.Controllers
         [HttpDelete("id/{id}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult> DeleteAttendenceAsync(int id)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -85,6 +89,7 @@ namespace AMS.Controller.Controllers
         [HttpGet(Name = "GetAllAttendence")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllAttendances()
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
