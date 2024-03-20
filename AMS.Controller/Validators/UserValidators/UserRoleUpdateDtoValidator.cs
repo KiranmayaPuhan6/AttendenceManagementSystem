@@ -1,15 +1,15 @@
-﻿using AMS.Services.Utility;
+﻿using AMS.DtoLibrary.DTO.UserDto;
 using FluentValidation;
 
 namespace AMS.Controller.Validators.UserValidators
 {
-    public class UpdateRoleValidator : AbstractValidator<UpdateRole>
+    public class UserRoleUpdateDtoValidator : AbstractValidator<UserRoleUpdateDto>
     {
-        public UpdateRoleValidator()
+        public UserRoleUpdateDtoValidator()
         {
             RuleFor(x => x.UserId)
-               .NotEmpty().WithMessage("User ID is required.")
-               .GreaterThan(0).WithMessage("User ID must be greater than zero.");
+               .NotEmpty().WithMessage("{PropertyName} is required.")
+               .GreaterThan(0).WithMessage("{PropertyName} must be greater than zero.");
 
             RuleFor(p => p.Role)
               .Cascade(CascadeMode.StopOnFirstFailure)

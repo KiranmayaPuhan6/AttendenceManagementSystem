@@ -142,12 +142,34 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
+
+        [HttpPut("UpdateManager")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> UpdateManagerAsync(UserManagerUpdateDto userManagerUpdateDto)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = await _service.UpdateManagerAsync(userManagerUpdateDto);
+            if (result.StatusCode == (int)HttpStatusCode.BadRequest)
+            {
+                _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest(result);
+            }
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok(result);
+        }
+
         [HttpPut("UpdateRole")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> UpdateRoleAsync(UpdateRole role)
+        public async Task<ActionResult> UpdateRoleAsync(DtoLibrary.DTO.UserDto.UserRoleUpdateDto role)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
 

@@ -1,6 +1,6 @@
-﻿namespace AMS.Services.Utility
+﻿namespace AMS.DtoLibrary.DTO.UserDto
 {
-    public class UpdateRole
+    public class UserRoleUpdateDto
     {
         public int UserId { get; set; }
         public string Role { get; set; }

@@ -14,8 +14,8 @@ namespace AMS.Controller.Validators.AttendenceValidators
               .Must(IsValid).WithMessage("{PropertyName} should be all letters.");
 
             RuleFor(x => x.UserId)
-                .NotEmpty().WithMessage("User ID is required.")
-                .GreaterThan(0).WithMessage("User ID must be greater than zero.");
+                .NotEmpty().WithMessage("{PropertyName} is required.")
+                .GreaterThan(0).WithMessage("{PropertyName} must be greater than zero.");
         }
 
         private bool IsValid(string attendenceType)

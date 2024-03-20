@@ -18,7 +18,6 @@ namespace AMS.Entities.Infrastructure.Repository
 
         public async Task<IEnumerable<T>> GetAllAsync() => await Task.FromResult(table.ToList());
         public async Task<T> GetByIdAsync(int id) => await table.FindAsync(id);
-        public async Task<T> GetByEmailAsync(string email) => await table.FindAsync(email);
         public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IIncludableQueryable<T, object>> includes = null)
         {
             IQueryable<T> query = table;

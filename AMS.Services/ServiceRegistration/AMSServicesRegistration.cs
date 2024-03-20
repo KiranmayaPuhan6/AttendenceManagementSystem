@@ -33,6 +33,7 @@ namespace AMS.Services.ServiceRegistration
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILeaveService, LeaveService>();
+            services.AddScoped<IManagerService,ManagerService>();
 
             return services;
         }
