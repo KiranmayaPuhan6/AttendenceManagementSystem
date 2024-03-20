@@ -11,8 +11,6 @@ namespace JwtAuthenticationManager.Models
         public string Email { get; set; }
         public string JwtToken { get; set; }
         public TimeSpan ExpiresAt { get; set; }
-
-        public string Role { get; set; }
         public int UserId { get; set; }
         public string? RefreshToken { get; set; }
     }

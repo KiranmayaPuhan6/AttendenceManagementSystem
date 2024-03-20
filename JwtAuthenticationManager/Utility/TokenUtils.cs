@@ -1,6 +1,7 @@
 ﻿using AMS.Entities.Models.Domain.Entities;
 using JwtAuthenticationManager.Models;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -10,6 +11,7 @@ namespace JwtAuthenticationManager.Utility
 {
     public static class TokenUtils
     {
+
         public static string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -20,6 +22,23 @@ namespace JwtAuthenticationManager.Utility
 
         public static TokenResponse GenerateAccessTokenFromRefreshToken(TokenResponse tokenResponse)
         {
+            IEnumerable<Account> users = null ;
+            HttpClient client = new HttpClient();
+            var response = client.GetAsync("https://localhost:7192/api/User/Validate/aec19c47-f1f4-4801-87a4-199f44443a5d");
+            response.Wait();
+            if (response.IsCompleted)
+            {
+                var result = response.Result;
+                if (result.IsSuccessStatusCode)
+                {
+                    var data = result.Content.ReadAsStringAsync();
+                    data.Wait();
+
+                    users = JsonConvert.DeserializeObject(data.Result, typeof(List<Account>)) as List<Account>;
+                }
+            }
+             var user = users?.Where(x => x.Email == tokenResponse.Email).FirstOrDefault();
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(JwtTokenHandler.JWT_SECURITY_KEY);
             var expiresIn = DateTime.UtcNow.AddMinutes(JwtTokenHandler.JWT_TOKEN_VALIDITY_MINS);
@@ -27,7 +46,7 @@ namespace JwtAuthenticationManager.Utility
             var claimsIdentity = new ClaimsIdentity(new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Name, tokenResponse.Email),
-                new Claim(ClaimTypes.Role, tokenResponse.Role)
+                new Claim(ClaimTypes.Role, user.Role)
             });
             var signingCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
@@ -47,7 +66,6 @@ namespace JwtAuthenticationManager.Utility
                 Email = tokenResponse.Email,
                 JwtToken = jwtToken,
                 RefreshToken = tokenResponse.RefreshToken,
-                Role = tokenResponse.Role,
                 ExpiresAt = expiresIn.ToLocalTime().TimeOfDay
             };
         }

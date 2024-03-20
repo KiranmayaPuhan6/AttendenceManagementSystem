@@ -25,7 +25,7 @@ namespace JwtAuthenticationManager
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             HttpClient client = new HttpClient();
-            var response = await client.GetAsync("https://localhost:7192/api/User/Validate");
+            var response = await client.GetAsync("https://localhost:7192/api/User/Validate/aec19c47-f1f4-4801-87a4-199f44443a5d");
 
                 var result = response.Content;
                 if (response.IsSuccessStatusCode)
@@ -72,7 +72,6 @@ namespace JwtAuthenticationManager
                 Email = user.Email,
                 ExpiresAt = tokenExpiryTimeStamp.ToLocalTime().TimeOfDay,
                 JwtToken = token,
-                Role = user.Role,
                 UserId = user.UserID,
             };
         }
