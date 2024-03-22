@@ -11,8 +11,6 @@ using Castle.Core.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Net.Mail;
-using Twilio.Rest.Studio.V2.Flow;
 
 namespace AMS.Services.Services
 {
