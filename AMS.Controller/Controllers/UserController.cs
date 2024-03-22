@@ -40,7 +40,7 @@ namespace AMS.Controller.Controllers
             if (authenticationResponse == null)
             {
                 _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return Unauthorized();
+                return Unauthorized("Email or password is not correct or email not verified");
             }
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
            authenticationResponse.RefreshToken = refreshToken;
