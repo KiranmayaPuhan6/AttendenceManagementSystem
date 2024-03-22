@@ -40,7 +40,7 @@ namespace JwtAuthenticationManager
                 return null;
             }
             var user = users.Where(x => x.Email == authenticationRequest.Email && BCrypt.Net.BCrypt.Verify(authenticationRequest.Password, x.Password)).FirstOrDefault();
-            if (user == null)
+            if (user == null || !user.IsEmailConfirmed)
             {
                 return null;
             }

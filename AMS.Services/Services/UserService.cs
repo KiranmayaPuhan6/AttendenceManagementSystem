@@ -11,8 +11,6 @@ using Castle.Core.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Net.Mail;
-using Twilio.Rest.Studio.V2.Flow;
 
 namespace AMS.Services.Services
 {
@@ -627,7 +625,6 @@ namespace AMS.Services.Services
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return users;
         }
-
         private async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _genericRepository.GetAllAsync(predicate: null,includes: q => q.Include(u => u.Attendence).Include(u => u.Leave));
