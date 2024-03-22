@@ -52,6 +52,12 @@ namespace AMS.Services.Services
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Email already taken", new UserBaseDto());
             }
+            var isPhonePresent = allUsers.Where(x => x.PhoneNumber == userCreationDto.PhoneNumber).Any();
+            if (isPhonePresent)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "PhoneNumber already present", new UserBaseDto());
+            }
             var user = _mapper.Map<User>(userCreationDto);
             if (user.FileUri != null)
             {
