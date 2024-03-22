@@ -17,15 +17,17 @@ namespace AMS.Services.Services
     public class HolidayService : IHolidayService
     {
         private readonly IGenericRepository<Holidays> _genericRepository;
+        private readonly IGenericRepository<Leave> _leaveRepository;
         private readonly ICacheService _cacheService;
         private readonly IResponseService _responseService;
         private readonly ILogger<HolidayService> _logger;
         private readonly IMapper _mapper;
         private readonly ILeaveService _leaveService;
         public HolidayService(IGenericRepository<Holidays> genericRepository, ICacheService cacheService, 
-            IResponseService responseService, ILogger<HolidayService> logger, IMapper mapper, ILeaveService leaveService) 
+            IResponseService responseService, ILogger<HolidayService> logger, IMapper mapper, ILeaveService leaveService, IGenericRepository<Leave> leaveRepository) 
         { 
             _genericRepository = genericRepository ?? throw new ArgumentNullException(nameof(genericRepository));
+            _leaveRepository = leaveRepository ?? throw new ArgumentNullException(nameof(leaveRepository));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
             _responseService = responseService ?? throw new ArgumentNullException(nameof(responseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -41,6 +43,16 @@ namespace AMS.Services.Services
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Error", new HolidayCreationDto());
+            }
+            var allHolidays = await _genericRepository.GetAllAsync();
+            if(allHolidays.Any())
+            {
+                var isHolidayPresent = allHolidays.Where(x => x.Holiday.Date == holidayCreationDto.Holiday.Date).Any();
+                if(isHolidayPresent)
+                {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                    return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Holiday already available", new HolidayCreationDto());
+                }
             }
             var result = await _genericRepository.CreateAsync(holiday);
             if(result)
@@ -124,6 +136,15 @@ namespace AMS.Services.Services
             foreach (var holiday in toDeleteHolidays)
             {
                 var isDeleted = await _genericRepository.DeleteAsync(holiday);
+                if (isDeleted)
+                {
+                    var allleaves = await _leaveRepository.GetAllAsync();
+                    var allLeavesToBeDeleted = allleaves.Where(x => x.LeaveStartDate.Date == holiday.Holiday.Date && x.LeaveType == "Holiday");
+                    foreach (var leave in allLeavesToBeDeleted)
+                    {
+                        await _leaveRepository.DeleteAsync(leave);
+                    }
+                }
             }
             holidaysList = await GetAllAsync();
             var success = SetData(CacheKeys.Holiday, holidaysList);

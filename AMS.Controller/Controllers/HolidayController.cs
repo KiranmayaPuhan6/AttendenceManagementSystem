@@ -61,7 +61,7 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("DeleteHolidays")]
+        [HttpDelete("DeleteHolidaysForAYear")]
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]

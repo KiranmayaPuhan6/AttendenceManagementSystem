@@ -50,7 +50,7 @@ namespace AMS.Services.Services
             }
 
             var holidays = _holidayRepository.GetAllAsync();
-            var isPresentHoliday = holidays.Result.Where(x => x.Holiday.Date >= leaveCreationDto.LeaveStartDate.Date && x.Holiday.Date < leaveCreationDto.LeaveEndDate);
+            var isPresentHoliday = holidays.Result.Where(x => x.Holiday.Date >= leaveCreationDto.LeaveStartDate.Date && x.Holiday.Date < leaveCreationDto.LeaveEndDate.Date);
             if(isPresentHoliday.Any())
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -77,7 +77,7 @@ namespace AMS.Services.Services
             for(var date = leave.LeaveStartDate.Date; date < leave.LeaveEndDate.Date; date = date.AddDays(1))
             {
                 var appliedLeaveList = leaveList.Where(l => l.UserId == leave.UserId);
-                var isAlreadyApplied = appliedLeaveList.Any(l => l.LeaveStartDate <= date && l.LeaveEndDate > date);
+                var isAlreadyApplied = appliedLeaveList.Any(l => l.LeaveStartDate.Date <= date && l.LeaveEndDate.Date > date);
                 if(isAlreadyApplied)
                 {
                     _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
@@ -224,8 +224,13 @@ namespace AMS.Services.Services
                 }
                 var success = await _genericRepository.UpdateAsync(leave);
                 if (success)
-                {                 
-                   
+                {
+                    var allleaves = await GetAllAsync();
+                    var isSuccess = SetData(CacheKeys.Leave, allleaves);
+                    if (isSuccess)
+                    {
+                        _logger.LogDebug($"Data set into Cache");
+                    }
                     var attendenceList = GetALlAttendenceByUserIdAsync(leave.UserId);
                     if(leave.StartHalfDay)
                     {
@@ -372,7 +377,7 @@ namespace AMS.Services.Services
 
                         foreach (var holiday in holidays)
                         {
-                            var isPresent = leavesList.Where(x => x.LeaveStartDate == holiday.Holiday && x.UserId == user.UserID && x.LeaveType == "Holiday").Any();
+                            var isPresent = leavesList.Where(x => x.LeaveStartDate.Date == holiday.Holiday.Date && x.UserId == user.UserID && x.LeaveType == "Holiday").Any();
                             if(isPresent)
                             {
                                 continue;
@@ -405,10 +410,12 @@ namespace AMS.Services.Services
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return false;
         }
+
         private async Task<IEnumerable<Leave>> GetAllAsync()
         {
             return await _genericRepository.GetAllAsync();
         }
+
         private IEnumerable<Leave> GetData(string key)
         {
             var cacheData = _cacheService.GetData<IEnumerable<Leave>>(key);
