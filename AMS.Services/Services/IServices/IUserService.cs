@@ -18,6 +18,8 @@ namespace AMS.Services.Services.IServices
         Task<bool> VerificationCodeForEmailAsync(int userId);
         Task<bool> VerifyPhoneNumberAsync(int userId, int token);
         Task<bool> VerificationCodeForPhoneNumberAsync(int userId);
+        Task<bool> ResetPasswordTokenAsync(string email);
+        Task<bool> ResetPasswordAsync(ResetPassword data);
         Task<IEnumerable<User>> GetAllUsersAsync();
     }
 }
