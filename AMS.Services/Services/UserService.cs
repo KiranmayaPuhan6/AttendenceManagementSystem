@@ -625,7 +625,6 @@ namespace AMS.Services.Services
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return users;
         }
-
         private async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _genericRepository.GetAllAsync(predicate: null,includes: q => q.Include(u => u.Attendence).Include(u => u.Leave));

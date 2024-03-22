@@ -34,6 +34,7 @@ namespace AMS.Services.ServiceRegistration
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILeaveService, LeaveService>();
             services.AddScoped<IManagerService,ManagerService>();
+            services.AddScoped<IHolidayService, HolidayService>();
 
             return services;
         }
