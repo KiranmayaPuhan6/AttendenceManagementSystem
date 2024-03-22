@@ -11,6 +11,8 @@ using Castle.Core.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Net.Mail;
+using Twilio.Rest.Studio.V2.Flow;
 
 namespace AMS.Services.Services
 {
@@ -49,6 +51,12 @@ namespace AMS.Services.Services
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "Email already taken", new UserBaseDto());
+            }
+            var isPhonePresent = allUsers.Where(x => x.PhoneNumber == userCreationDto.PhoneNumber).Any();
+            if (isPhonePresent)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.BadRequest, "PhoneNumber already present", new UserBaseDto());
             }
             var user = _mapper.Map<User>(userCreationDto);
             if (user.FileUri != null)
@@ -464,10 +472,11 @@ namespace AMS.Services.Services
                 Subject = "Verify your email",
                 Message = $"<html><body><p>Your verification code is {generatedNumber}.</p><p>It is valid for 30 minutes.</p></body></html>"
             };
-            await _emailService.SendEmailAsync(emailAddress);
+           
             var success = await _genericRepository.UpdateAsync(user);
             if (success)
             {
+                await _emailService.SendEmailAsync(emailAddress);
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return true;
             }
@@ -521,9 +530,88 @@ namespace AMS.Services.Services
             }
             user.PasswordResetToken = generatedNumber;
             user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
-            await _smsService.SendMessageAsync(user.PhoneNumber,$"Your verification code is {generatedNumber} . This is valid for 30 mins.");
             var success = await _genericRepository.UpdateAsync(user);
             if (success)
+            {
+                await _smsService.SendMessageAsync(user.PhoneNumber, $"Your verification code is {generatedNumber} . This is valid for 30 mins.");
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return true;
+            }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
+        }
+
+        public async Task<bool> ResetPasswordTokenAsync(string email)
+        {
+            IEnumerable<User> userList;
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = GetData(CacheKeys.User);
+
+            if (result.IsNullOrEmpty())
+            {
+                userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+            }
+            else
+            {
+                userList = result;
+            }
+            var user = userList.Where(x => x.Email == email).FirstOrDefault();
+            if (user == null)
+            {
+                return false;
+            }
+            var generatedNumber = RandomNumberGenerator.Generate(100000, 999999);
+            user.PasswordResetToken = generatedNumber;
+            user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
+            EmailAddress emailAddress = new EmailAddress
+            {
+                To = email,
+                Subject = "Reset Password",
+                Message = $"<html><body><p>Your verification code to reset your password is {generatedNumber}.</p><p>It is valid for 30 minutes.</p></body></html>"
+            };
+            var success = await _genericRepository.UpdateAsync(user);
+            if (success)
+            {
+                await _emailService.SendEmailAsync(emailAddress);
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return true;
+            }
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return false;
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPassword data)
+        {
+            IEnumerable<User> userList;
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = GetData(CacheKeys.User);
+
+            if (result.IsNullOrEmpty())
+            {
+                userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+            }
+            else
+            {
+                userList = result;
+            }
+            var user = userList.Where(x => x.PasswordResetToken == data.Token).FirstOrDefault();
+            user.Password = BCrypt.Net.BCrypt.HashPassword(data.Password);
+            user.PasswordResetToken = null;
+            user.ResetTokenExpires = null;
+            var success = await _genericRepository.UpdateAsync(user);
+            if(success)
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return true;

@@ -247,7 +247,7 @@ namespace AMS.Controller.Controllers
             return Ok("Verification code sent to registered emailaddress");
         }
 
-        [HttpPost("VerifyEmail")]
+        [HttpPut("VerifyEmail")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
@@ -283,7 +283,7 @@ namespace AMS.Controller.Controllers
             return Ok("Verification code sent to registered phone-number");
         }
 
-        [HttpPost("VerifyPhoneNumber")]
+        [HttpPut("VerifyPhoneNumber")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
@@ -300,5 +300,40 @@ namespace AMS.Controller.Controllers
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok("PhoneNumber Verified");
         }
+
+        [HttpPost("ForgetPassword")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> ResetPasswordTokenAsync(string email)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.ResetPasswordTokenAsync(email);
+            if (!result)
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest("Provide a valid email");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Verification code sent to registered emailaddress");
+        }
+
+        [HttpPut("ResetPassword")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> ResetPasswordAsync(ResetPassword data)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var result = await _service.ResetPasswordAsync(data);
+            if (!result)
+            {
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return BadRequest("Verification code is incorrect.");
+            }
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok("Password changed successfully");
+        }
+
     }
 }
