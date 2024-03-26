@@ -82,7 +82,7 @@ namespace AMS.Controller.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("DeleteHoliday")]
+        [HttpDelete("id/{id}")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
