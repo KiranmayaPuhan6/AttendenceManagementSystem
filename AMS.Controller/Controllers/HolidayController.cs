@@ -41,7 +41,7 @@ namespace AMS.Controller.Controllers
         }
 
         [HttpGet("GetAllHolidays")]
-        [SwaggerResponse(StatusCodes.Status201Created)]
+        [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
         [Authorize(Roles = "Admin")]
@@ -62,7 +62,7 @@ namespace AMS.Controller.Controllers
         }
 
         [HttpDelete("DeleteHolidaysForAYear")]
-        [SwaggerResponse(StatusCodes.Status201Created)]
+        [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
         [Authorize(Roles = "Admin")]
@@ -71,13 +71,36 @@ namespace AMS.Controller.Controllers
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
 
             var result = await _service.DeleteAllHolidaysAsync(year);
-            if (!result)
+            if (!result.IsSuccess)
             {
+                _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
                 _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return NotFound("No such holiday found");
+                return NotFound(result);
             }
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return Ok("Deleted");
+            return Ok(result);
+        }
+
+        [HttpDelete("DeleteHoliday")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteHolidayAsync(int id)
+        {
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = await _service.DeleteHolidayAsync(id);
+            if (!result.IsSuccess)
+            {
+                _logger.LogError($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+                _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return NotFound(result);
+            }
+            _logger.LogDebug($"{result.Message} message with StatusCode: {result.StatusCode} from {MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name}");
+            _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return Ok(result);
         }
     }
 }

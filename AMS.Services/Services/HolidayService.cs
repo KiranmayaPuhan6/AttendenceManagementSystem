@@ -106,7 +106,7 @@ namespace AMS.Services.Services
             return await _responseService.ResponseDtoFormatterAsync<Holidays>(true, (int)HttpStatusCode.OK, "Success", holidaysList);
         }
 
-        public async Task<bool> DeleteAllHolidaysAsync(string year)
+        public async Task<ResponseList<Holidays>> DeleteAllHolidaysAsync(string year)
         {
             IEnumerable<Holidays> holidaysList;
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -131,7 +131,7 @@ namespace AMS.Services.Services
             if(toDeleteHolidays.IsNullOrEmpty())
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return false;
+                return await _responseService.ResponseDtoFormatterAsync<Holidays>(false, (int)HttpStatusCode.NotFound, "No such holidays", new List<Holidays>());
             }
             foreach (var holiday in toDeleteHolidays)
             {
@@ -155,7 +155,40 @@ namespace AMS.Services.Services
             }
 
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-            return true;
+            return await _responseService.ResponseDtoFormatterAsync<Holidays>(true, (int)HttpStatusCode.NoContent  , "Deleted", toDeleteHolidays);
+        }
+
+        public async Task<Response<Holidays>> DeleteHolidayAsync(int id)
+        {
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+            var holiday = await _genericRepository.GetByIdAsync(id);
+            if (holiday == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return await _responseService.ResponseDtoFormatterAsync(false, (int)HttpStatusCode.NotFound, "RecordsNotFound", new Holidays()); ;
+            }
+
+            var isDeleted = await _genericRepository.DeleteAsync(holiday);
+            if (isDeleted)
+            {
+                var allleaves = await _leaveRepository.GetAllAsync();
+                var allLeavesToBeDeleted = allleaves.Where(x => x.LeaveStartDate.Date == holiday.Holiday.Date && x.LeaveType == "Holiday");
+                foreach (var leave in allLeavesToBeDeleted)
+                {
+                    await _leaveRepository.DeleteAsync(leave);
+                }
+            }
+
+            var holidaysList = await GetAllAsync();
+            var success = SetData(CacheKeys.Holiday, holidaysList);
+
+            if (success)
+            {
+                _logger.LogDebug($"Data set into Cache");
+            }
+
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+            return await _responseService.ResponseDtoFormatterAsync(true, (int)HttpStatusCode.NoContent, "Deleted", holiday); ;
         }
 
         private async Task<IEnumerable<Holidays>> GetAllAsync()

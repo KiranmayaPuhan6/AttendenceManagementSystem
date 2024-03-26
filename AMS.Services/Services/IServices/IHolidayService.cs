@@ -8,6 +8,7 @@ namespace AMS.Services.Services.IServices
     {
         Task<Response<HolidayCreationDto>> CreateNewHolidayAsync(HolidayCreationDto holidayCreationDto);
         Task<ResponseList<Holidays>> GetAllHolidaysAsync();
-        Task<bool> DeleteAllHolidaysAsync(string year);
+        Task<ResponseList<Holidays>> DeleteAllHolidaysAsync(string year);
+        Task<Response<Holidays>> DeleteHolidayAsync(int id);
     }
 }
