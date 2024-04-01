@@ -32,6 +32,7 @@ namespace AMS.Controller.Controllers
         [HttpPost("Authenticate")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status401Unauthorized)]
+        [AllowAnonymous]
         public async Task<IActionResult> LoginUser([FromBody] AuthenticationRequest _user)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -73,6 +74,7 @@ namespace AMS.Controller.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [SwaggerResponse(StatusCodes.Status500InternalServerError)]
+        [AllowAnonymous]
         public async Task<ActionResult> CreateNewUserAsync([FromForm] UserCreationDto userCreationDto)
         {
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
