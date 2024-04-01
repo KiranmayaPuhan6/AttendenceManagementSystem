@@ -28,10 +28,10 @@ namespace AMS.Services.ServiceRegistration
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IAttendenceService, AttendenceService>();
             services.Configure<TwilioOptions>(configuration.GetSection("Twilio"));
-            services.AddScoped<ISmsService, SmsService>();
+            services.AddTransient<ISmsService, SmsService>();
             services.Configure<EmailOptions>(configuration.GetSection("Email"));
             services.AddScoped<IImageService, ImageService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddTransient<IEmailService, EmailService>();
             services.AddScoped<ILeaveService, LeaveService>();
             services.AddScoped<IManagerService,ManagerService>();
             services.AddScoped<IHolidayService, HolidayService>();
