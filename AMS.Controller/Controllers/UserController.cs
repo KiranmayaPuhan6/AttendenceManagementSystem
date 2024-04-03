@@ -38,6 +38,11 @@ namespace AMS.Controller.Controllers
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var authenticationResponse =await _jwtAuthenticationManager.GenerateToken(_user);
             var refreshToken = TokenUtils.GenerateRefreshToken();
+            var success = await _service.AddRefreshTokenAsync(_user.Email, refreshToken);
+            if (!success)
+            {
+                return Unauthorized("Email or password is not correct or email not verified");
+            }
             if (authenticationResponse == null)
             {
                 _logger.LogError($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
@@ -55,6 +60,11 @@ namespace AMS.Controller.Controllers
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var response = TokenUtils.GenerateAccessTokenFromRefreshToken(tokenResponse);
+            if (response == null)
+            {
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
+                return NotFound("Provide a valid email and valid refresh-token");
+            }
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok(response);
         }
@@ -243,7 +253,7 @@ namespace AMS.Controller.Controllers
             if (!result)
             {
                 _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return BadRequest("Provide a valid email");
+                return BadRequest("Provide a valid email or email already verified");
             }
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok("Verification code sent to registered emailaddress");
@@ -279,7 +289,7 @@ namespace AMS.Controller.Controllers
             if (!result)
             {
                 _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
-                return BadRequest("Provide a valid phone-number");
+                return BadRequest("Provide a valid phone-number or phone-number already verified");
             }
             _logger.LogInformation($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return Ok("Verification code sent to registered phone-number");

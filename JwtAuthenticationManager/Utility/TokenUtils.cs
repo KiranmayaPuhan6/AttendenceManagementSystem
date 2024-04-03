@@ -22,7 +22,7 @@ namespace JwtAuthenticationManager.Utility
 
         public static TokenResponse GenerateAccessTokenFromRefreshToken(TokenResponse tokenResponse)
         {
-            IEnumerable<Account> users = null ;
+            IEnumerable<Account>? users = null ;
             HttpClient client = new HttpClient();
             var response = client.GetAsync("https://localhost:7192/api/User/Validate/aec19c47-f1f4-4801-87a4-199f44443a5d");
             response.Wait();
@@ -37,7 +37,13 @@ namespace JwtAuthenticationManager.Utility
                     users = JsonConvert.DeserializeObject(data.Result, typeof(List<Account>)) as List<Account>;
                 }
             }
-             var user = users?.Where(x => x.Email == tokenResponse.Email).FirstOrDefault();
+             //var user = users?.Where(x => x.Email == tokenResponse.Email).FirstOrDefault();
+             var user = users?.Where(x => x.Email == tokenResponse.Email &&  BCrypt.Net.BCrypt.Verify(tokenResponse.RefreshToken, x.RefreshToken)).FirstOrDefault();
+
+            if (user == null || user.RefreshTokenExpires < DateTime.Now)
+            {
+                return null;
+            }
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(JwtTokenHandler.JWT_SECURITY_KEY);
