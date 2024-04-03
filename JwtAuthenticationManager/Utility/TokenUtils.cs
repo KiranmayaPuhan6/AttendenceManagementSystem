@@ -38,6 +38,12 @@ namespace JwtAuthenticationManager.Utility
                 }
             }
              var user = users?.Where(x => x.Email == tokenResponse.Email).FirstOrDefault();
+            //var user = users?.Where(x => x.Email == tokenResponse.Email &&  BCrypt.Net.BCrypt.Verify(tokenResponse.RefreshToken, x.RefreshToken)).FirstOrDefault();
+
+            //if (user == null || user.RefreshTokenExpires < DateTime.Now)
+            //{
+            //    return null;
+            //}
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(JwtTokenHandler.JWT_SECURITY_KEY);

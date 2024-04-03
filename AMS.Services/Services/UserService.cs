@@ -7,6 +7,7 @@ using AMS.Services.Utility;
 using AMS.Services.Utility.HelperMethods;
 using AMS.Services.Utility.ResponseModel;
 using AutoMapper;
+using BCrypt.Net;
 using Castle.Core.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -331,6 +332,43 @@ namespace AMS.Services.Services
             return null;
         }
 
+        public async Task<bool> AddRefreshTokenAsync(string email,string refreshToken)
+        {
+            IEnumerable<User> userList;
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
+
+            var result = GetData(CacheKeys.User);
+
+            if (result.IsNullOrEmpty())
+            {
+                userList = await GetAllAsync();
+                var isSuccess = SetData(CacheKeys.User, userList);
+                if (isSuccess)
+                {
+                    _logger.LogDebug($"Data set into Cache");
+                }
+            }
+            else
+            {
+                userList = result;
+            }
+
+            var user = userList.Where(x => x.Email == email).FirstOrDefault();
+
+            if (user != null)
+            {
+               //user.RefreshToken = BCrypt.Net.BCrypt.HashPassword(refreshToken);
+               //user.RefreshTokenExpires = DateTime.Now.AddHours(1);
+               var success = await _genericRepository.CreateAsync(user);
+                if (success)
+                {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
         public async Task<Response<UserDto>> DeleteUserAsync(int id)
         {
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
@@ -605,6 +643,10 @@ namespace AMS.Services.Services
                 userList = result;
             }
             var user = userList.Where(x => x.PasswordResetToken == data.Token).FirstOrDefault();
+            if(user == null || user.ResetTokenExpires < DateTime.Now)
+            {
+                return false;
+            }
             user.Password = BCrypt.Net.BCrypt.HashPassword(data.Password);
             user.PasswordResetToken = null;
             user.ResetTokenExpires = null;
