@@ -12,6 +12,7 @@ namespace AMS.Services.Services.IServices
         Task<Response<UserBaseDto>> UpdateUserAsync(UserUpdateDto userUpdateDto);
         Task<Response<UserBaseDto>> UpdateManagerAsync(UserManagerUpdateDto userManagerUpdateDto);
         Task<string> UpdateRoleAsync(UserRoleUpdateDto role);
+        Task<bool> AddRefreshTokenAsync(string email, string refreshToken);
         Task<Response<UserDto>> DeleteUserAsync(int id);
         Task<Response<UserDto>> ReadUserAsync(int id);
         Task<bool> VerifyEmailAsync(int userId, int token);

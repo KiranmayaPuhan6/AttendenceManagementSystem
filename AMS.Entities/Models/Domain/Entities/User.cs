@@ -28,6 +28,8 @@ namespace AMS.Entities.Models.Domain.Entities
         public string? ActualFileUrl { get; set; }
         public int? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpires { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpires { get; set; }
         public virtual IEnumerable<Attendence> Attendence { get; set; }
         public virtual IEnumerable<Leave> Leave { get; set; }
     }

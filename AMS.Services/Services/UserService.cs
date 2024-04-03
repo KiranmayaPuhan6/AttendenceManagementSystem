@@ -357,15 +357,20 @@ namespace AMS.Services.Services
 
             if (user != null)
             {
-               //user.RefreshToken = BCrypt.Net.BCrypt.HashPassword(refreshToken);
-               //user.RefreshTokenExpires = DateTime.Now.AddHours(1);
-               var success = await _genericRepository.CreateAsync(user);
+                user.RefreshToken = BCrypt.Net.BCrypt.HashPassword(refreshToken);
+                user.RefreshTokenExpires = DateTime.Now.AddDays(1);
+                var success = await _genericRepository.UpdateAsync(user);
                 if (success)
                 {
+                    _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                     return true;
                 }
+
+                _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
                 return false;
             }
+
+            _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
             return false;
         }
 
@@ -495,6 +500,10 @@ namespace AMS.Services.Services
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var generatedNumber = RandomNumberGenerator.Generate(100000, 999999);
             var user = await _genericRepository.GetByIdAsync(userId);
+            if(user.IsEmailConfirmed)
+            {
+                return false;
+            }
             if (user == null)
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
@@ -559,6 +568,10 @@ namespace AMS.Services.Services
             _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} started");
             var generatedNumber = RandomNumberGenerator.Generate(100000, 999999);
             var user = await _genericRepository.GetByIdAsync(userId);
+            if(user.IsPhoneNumberConfirmed)
+            {
+                return false;
+            }
             if (user == null)
             {
                 _logger.LogDebug($"{MethodNameExtensionHelper.GetCurrentMethod()} in {this.GetType().Name} ended");
